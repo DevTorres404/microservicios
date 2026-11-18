@@ -1,7 +1,7 @@
 # Tasks: sistema-microservicios-distribuidos
 
 Desglose de implementación derivado de `proposal.md`, de los 11 deltas en `specs/`, de `design.md` y de `PLAN_IMPLEMENTACION.md` (§7 paquetes W0–W10).
-Ninguna tarea está completada: todas las casillas comienzan en `[ ]`.
+Estado inicial de la planificación: todas las casillas comenzaban en `[ ]`. El avance real verificado se registra en `apply-progress.md`.
 
 ## Formato y convenciones
 
@@ -66,7 +66,7 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W0 — Andamiaje, contrato de build y activación de TDD
 
-- [ ] **W0-1** Inicializar el repositorio Git con rama `main` y commit raíz del andamiaje.
+- [x] **W0-1** Inicializar el repositorio Git con rama `main` y commit raíz del andamiaje.
   - Aceptación: `HEAD` apunta a `main` y existe al menos un commit raíz.
   - Depende: —
   - Spec: DE (entorno reproducible desde clon limpio, base del entregable)
@@ -78,55 +78,55 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
   - Spec: DE (reproducibilidad del clon), TD (repositorio público)
   - Verificación: `git ls-remote --heads origin main`
 
-- [ ] **W0-3** Crear `.gitignore` con `.env`, `target/`, `*.log`, `.idea/` y `*.iml`.
+- [x] **W0-3** Crear `.gitignore` con `.env`, `target/`, `*.log`, `.idea/` y `*.iml`.
   - Aceptación: `.env` queda ignorado y los artefactos de build no aparecen en `git status`.
   - Depende: W0-1
   - Spec: DE (ausencia de secretos en el repositorio)
   - Verificación: `git check-ignore -v .env`
 
-- [ ] **W0-4** Crear `.env.example` con todas las variables requeridas y valores no productivos, sin secretos reales.
+- [x] **W0-4** Crear `.env.example` con todas las variables requeridas y valores no productivos, sin secretos reales.
   - Aceptación: el ejemplo lista todas las variables usadas por Compose y `.env` no está versionado.
   - Depende: W0-3
   - Spec: DE (archivo de ejemplo versionado; barrido de secretos)
   - Verificación: `test -f .env.example && grep -qE '^POSTGRES_PASSWORD=' .env.example && ! git ls-files --error-unmatch .env >/dev/null 2>&1`
 
-- [ ] **W0-5** Crear `.gitattributes` con `*.sh text eol=lf` y `*.ps1 text eol=crlf`.
+- [x] **W0-5** Crear `.gitattributes` con `*.sh text eol=lf` y `*.ps1 text eol=crlf`.
   - Aceptación: la regla LF queda declarada para todos los scripts montados en contenedores Linux.
   - Depende: W0-1
   - Spec: DE (arranque reproducible; regla fijada en `openspec/config.yaml`)
   - Verificación: `grep -nE '^\*\.sh text eol=lf$' .gitattributes`
 
-- [ ] **W0-6** Verificar en la documentación oficial la matriz Spring Boot 3.5.x / Spring Cloud 2025.0.x y registrar versiones exactas y digests en `docs/decisiones.md` (ADR-10), **antes** de escribir el POM.
+- [x] **W0-6** Verificar en la documentación oficial la matriz Spring Boot 3.5.x / Spring Cloud 2025.0.x y registrar versiones exactas y digests en `docs/decisiones.md` (ADR-10), **antes** de escribir el POM.
   - Aceptación: ADR-10 fija versión exacta de Boot, de Cloud y del JDK, con enlace a la matriz oficial y fecha de consulta.
   - Depende: W0-1
   - Spec: DE (build reproducible), riesgo «matriz de versiones» del proposal
   - Verificación: `grep -A8 'ADR-10' docs/decisiones.md | grep -qE 'Spring Boot 3\.5\.[0-9]+' && grep -A8 'ADR-10' docs/decisiones.md | grep -qE 'Spring Cloud 2025\.0\.[0-9]+'`
 
-- [ ] **W0-7** Crear el parent POM `packaging=pom` con `spring-boot-dependencies` y `spring-cloud-dependencies` importados, versiones pinneadas desde ADR-10 y los cinco módulos declarados.
+- [x] **W0-7** Crear el parent POM `packaging=pom` con `spring-boot-dependencies` y `spring-cloud-dependencies` importados, versiones pinneadas desde ADR-10 y los cinco módulos declarados.
   - Aceptación: ningún módulo declara versión de dependencia; el reactor resuelve sin warnings de versión.
   - Depende: W0-6
   - Spec: DE (build reproducible con `mvn -T 1C verify`)
   - Verificación: `mvn -q -N validate`
 
-- [ ] **W0-8** Crear los módulos vacíos `eureka-server`, `gateway`, `servicio-pedidos`, `servicio-inventario` y `libs/persistence-routing` con su `pom.xml` y estructura `src/main/java`.
+- [x] **W0-8** Crear los módulos vacíos `eureka-server`, `gateway`, `servicio-pedidos`, `servicio-inventario` y `libs/persistence-routing` con su `pom.xml` y estructura `src/main/java`.
   - Aceptación: el reactor compila los cinco módulos sin tests.
   - Depende: W0-7
   - Spec: DE (build reproducible), arquitectura de `design.md` §15
   - Verificación: `mvn -q -T 1C -DskipTests package`
 
-- [ ] **W0-9** Escribir el primer test real (RED) en `libs/persistence-routing`: `DataSourceKeyTest` que fija el vocabulario cerrado `PRIMARY`, `REPLICA_1`, `REPLICA_2`, e implementarlo (GREEN) con el enum `DataSourceKey`.
+- [x] **W0-9** Escribir el primer test real (RED) en `libs/persistence-routing`: `DataSourceKeyTest` que fija el vocabulario cerrado `PRIMARY`, `REPLICA_1`, `REPLICA_2`, e implementarlo (GREEN) con el enum `DataSourceKey`.
   - Aceptación: el test enumera exactamente tres claves y falla si se añade una cuarta; `mvn -q test` ejecuta al menos un test.
   - Depende: W0-8
   - Spec: RPR (vocabulario de nodos), `design.md` §4.1
   - Verificación: `mvn -q -pl libs/persistence-routing -am test`
 
-- [ ] **W0-10** Activar `strict_tdd: true` en `openspec/config.yaml` y alinear `rules.apply.tdd` en cuanto `mvn -q test` ejecute al menos un test.
+- [x] **W0-10** Activar `strict_tdd: true` en `openspec/config.yaml` y alinear `rules.apply.tdd` en cuanto `mvn -q test` ejecute al menos un test.
   - Aceptación: la configuración declara TDD estricto y el cambio queda registrado en `strict_tdd_source`.
   - Depende: W0-9
   - Spec: DE (contrato de verificación del proyecto; `strict_tdd_target_gate: W0`)
   - Verificación: `grep -n 'strict_tdd: true' openspec/config.yaml`
 
-- [ ] **W0-11** Añadir CI mínimo en `.github/workflows/build.yml` que ejecute `mvn -q verify` con JDK 21.
+- [x] **W0-11** Añadir CI mínimo en `.github/workflows/build.yml` que ejecute `mvn -q verify` con JDK 21.
   - Aceptación: el workflow se dispara en `push` y `pull_request`, y localmente el mismo comando termina en 0.
   - Depende: W0-9
   - Spec: DE (verificación reproducible del build)
@@ -136,19 +136,19 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W1 — Eureka Server standalone
 
-- [ ] **W1-1** Implementar `eureka-server` con su `application.yml`: autopreservación desactivada, barrido cada 3000 ms, cache de respuesta 1000 ms, `use-read-only-response-cache=false`, servidor sin registro ni fetch propios.
+- [x] **W1-1** Implementar `eureka-server` con su `application.yml`: autopreservación desactivada, barrido cada 3000 ms, cache de respuesta 1000 ms, `use-read-only-response-cache=false`, servidor sin registro ni fetch propios.
   - Aceptación: con el servidor arriba, `GET /eureka/apps` responde y la configuración efectiva muestra los cuatro parámetros.
   - Depende: W0-8
   - Spec: SE (registro y expulsión observables), `design.md` §10
   - Verificación: `mvn -q -pl eureka-server -am package`
 
-- [ ] **W1-2** Añadir `eureka-server/Dockerfile` multi-stage con usuario no root y healthcheck contra `/actuator/health`.
+- [x] **W1-2** Añadir `eureka-server/Dockerfile` multi-stage con usuario no root y healthcheck contra `/actuator/health`.
   - Aceptación: la imagen construye y el healthcheck pasa en estado saludable.
   - Depende: W1-1
   - Spec: DE (healthchecks reales por servicio)
   - Verificación: `docker build -q -t eureka-server:local eureka-server/`
 
-- [ ] **W1-3** Crear `scripts/eureka-lease-probe.sh` que registra una instancia efímera contra la API de Eureka, mide su expulsión (≤15 s) y su re-registro.
+- [x] **W1-3** Crear `scripts/eureka-lease-probe.sh` que registra una instancia efímera contra la API de Eureka, mide su expulsión (≤15 s) y su re-registro.
   - Aceptación: el script informa lease, expiración medida y re-registro, y termina en 0 con el servidor levantado.
   - Depende: W1-1
   - Spec: SE (renovación, expiración y re-registro), insumo temprano de P03
