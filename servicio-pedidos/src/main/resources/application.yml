@@ -1,0 +1,41 @@
+# Order service configuration.
+#
+# Every connection value comes from the environment: this file must not pin hosts, ports or
+# credentials (apply rules in openspec/config.yaml). Until the persistence routing core lands in
+# W6 this service runs against a single pool, its own primary database.
+server:
+  port: ${SERVER_PORT:8082}
+
+spring:
+  application:
+    name: servicio-pedidos
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: ${SPRING_APPLICATION_NAME:servicio-pedidos}-primary
+      maximum-pool-size: ${DB_PRIMARY_POOL_SIZE:10}
+      minimum-idle: ${DB_PRIMARY_MIN_IDLE:2}
+      connection-timeout: 2000
+      validation-timeout: 1000
+      # A service must start even when a node is unreachable; the pool fails on borrow, not on boot.
+      initialization-fail-timeout: -1
+
+  jpa:
+    # OSIV would open the EntityManager outside the transaction, so the statement could be emitted
+    # after the routing decision was taken. Mandatory rule from openspec/config.yaml.
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  # Flyway auto-configuration is disabled on purpose: the migration runs through an explicit bean
+  # bound to primaryDataSource (ADR-06). See FlywayConfig.
+  flyway:
+    enabled: false
