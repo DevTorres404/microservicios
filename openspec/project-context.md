@@ -42,6 +42,21 @@ Herramientas verificadas en la máquina (ejecutadas durante la detección):
 Stack declarado en el plan (no verificable en disco sin `pom.xml`):
 
 - **Java 21 LTS** + **Spring Boot 3.5.x** + **Spring Cloud 2025.0.x** (decisión D2, *pendiente de confirmación del equipo*).
+
+### 3.1 Matriz de versiones confirmada (W0-6, 2026-11-18)
+
+Verificada contra la tabla oficial de compatibilidad antes de generar el parent POM. Registro
+completo y digests en `docs/decisiones.md` (ADR-10).
+
+| Componente | Versión elegida | Evidencia |
+| :-- | :-- | :-- |
+| Spring Boot | `3.5.16` | `spring.io/projects/spring-cloud#support` Tabla 1: `2025.0.x` ↔ Boot `3.5.x`; `3.5.16` es el último parche de la línea en Maven Central. |
+| Spring Cloud | `2025.0.3` | Misma tabla (release train «Northfields»); `2025.0.3` es el último servicio de la train en Maven Central. |
+| JDK | Temurin `21.0.12.1+1` LTS | `mvn -version` local: runtime `C:\Users\Damian\tools\jdk-21.0.12.1+1`. |
+| Maven | `3.9.16` | `mvn -version` local. |
+
+Riesgo declarado: la matriz oficial marca `2025.0.x` como *end of life*. Es la train correcta para
+Boot 3.5.x; subir a Boot 4.x exige cambiar de train completa, no un bump de parche.
 - **Maven multi-módulo** con parent POM: `eureka-server`, `gateway`, `servicio-pedidos`, `servicio-inventario`.
 - **PostgreSQL 16**: 1 primario + 2 réplicas asíncronas por streaming WAL, una base por servicio (`pedidos_db`, `inventario_db`).
 - **Docker Compose** con 9 contenedores y red `backend`.
