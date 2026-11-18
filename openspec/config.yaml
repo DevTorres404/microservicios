@@ -79,7 +79,7 @@ rules:
       - spring.jpa.open-in-view=false es obligatorio en los servicios de negocio.
       - Sin secretos en el repositorio: .env ignorado, .env.example versionado.
       - .gitattributes con `*.sh text eol=lf` para los scripts montados en contenedores Linux.
-    tdd: false # provisional; ver strict_tdd
+    tdd: true # activo desde W0-9; ver strict_tdd
     test_command: mvn -q test
   verify:
     test_command: mvn -q verify
