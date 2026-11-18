@@ -19,12 +19,13 @@ project:
     - Actividad_Microservicios_Distribuidos.md
     - PLAN_IMPLEMENTACION.md
 
-# Strict TDD: no existe runner en disco todavía (proyecto greenfield), por eso `false`.
-# Objetivo confirmado: pasar a `true` en W0, cuando `mvn -q verify` corra verde.
-strict_tdd: false
-strict_tdd_source: no-test-runner (greenfield; sin pom.xml)
+# Strict TDD: activo desde W0-9, cuando `mvn -q -pl libs/persistence-routing -am test`
+# ejecutó 3 tests reales en verde (DataSourceKeyTest). Desde ese commit, toda tarea nueva
+# de este cambio debe escribir el test (RED) antes de la implementación (GREEN).
+strict_tdd: true
+strict_tdd_source: W0-9 — `mvn -q -pl libs/persistence-routing -am test` → 3 tests, 0 fallos (2026-11-18)
 strict_tdd_target: true
-strict_tdd_target_gate: W0 — activar cuando exista `pom.xml` y `mvn -q test` ejecute al menos un test
+strict_tdd_target_gate: W0 — cumplido: existe `pom.xml` y `mvn -q test` ejecuta al menos un test
 
 context: |
   Stack: Java 21 (Temurin 21.0.12.1) + Spring Boot 3.5.x + Spring Cloud 2025.0.x.
