@@ -1,0 +1,33 @@
+# Local AI runtime state
+.atl/
+
+# Secrets: only .env.example is versioned
+.env
+.env.*
+!.env.example
+
+# Maven build output
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# Logs
+*.log
+logs/
+
+# IDE and editor state
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Compiled classes
+*.class

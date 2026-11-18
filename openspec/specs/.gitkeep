@@ -1,0 +1,3 @@
+# Main specs directory.
+# Contiene la fuente de verdad por dominio: openspec/specs/{domain}/spec.md
+# sdd-archive fusiona aquí los deltas de cada cambio completado.

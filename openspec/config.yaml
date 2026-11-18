@@ -1,0 +1,93 @@
+# SDD project configuration — microservicios
+# Generado por sdd-init el 2026-11-18. Editar solo si cambia el stack o las reglas del proyecto.
+
+schema: spec-driven
+
+persistence:
+  artifact_store: openspec # archivos planos bajo openspec/; el CLI `openspec` NO está instalado
+  engram_mirror: pending # Engram no disponible durante el bootstrap; ver openspec/project-context.md
+  mirror_keys:
+    - sdd-init/microservicios
+    - sdd/microservicios/testing-capabilities
+    - skill-registry
+
+project:
+  name: microservicios
+  kind: greenfield
+  artifact_language: es-neutral # entregable académico en español; registro neutro/profesional
+  source_documents:
+    - Actividad_Microservicios_Distribuidos.md
+    - PLAN_IMPLEMENTACION.md
+
+# Strict TDD: no existe runner en disco todavía (proyecto greenfield), por eso `false`.
+# Objetivo confirmado: pasar a `true` en W0, cuando `mvn -q verify` corra verde.
+strict_tdd: false
+strict_tdd_source: no-test-runner (greenfield; sin pom.xml)
+strict_tdd_target: true
+strict_tdd_target_gate: W0 — activar cuando exista `pom.xml` y `mvn -q test` ejecute al menos un test
+
+context: |
+  Stack: Java 21 (Temurin 21.0.12.1) + Spring Boot 3.5.x + Spring Cloud 2025.0.x.
+  Las versiones de Boot/Cloud están pendientes de confirmación contra la matriz oficial de compatibilidad.
+  Build: Maven multi-módulo (parent POM), Maven 3.9.16, un solo `mvn -T 1C verify` para todo el reactor.
+  Servicios: eureka-server, gateway, servicio-pedidos, servicio-inventario (2 instancias por servicio de negocio).
+  Comunicación: Spring Cloud Gateway con rutas `lb://`, Eureka standalone, OpenFeign + Resilience4j.
+  Persistencia: PostgreSQL 16, 1 primario + 2 réplicas asíncronas (WAL streaming), una base por servicio,
+  routing con AbstractRoutingDataSource + LazyConnectionDataSourceProxy + ThreadLocal + aspecto `@Transactional`.
+  Infra: Docker Compose (9 contenedores), red `backend`, solo 8080 y 8761 publicados al host.
+  Testing objetivo: JUnit 5 (unitario) + Testcontainers PostgreSQL (integración) vía `mvn verify`.
+
+testing:
+  runner: maven-surefire
+  framework: JUnit 5
+  command: mvn -q verify
+  unit_command: mvn -q test
+  module_command: mvn -q -pl <module> -am test
+  integration: testcontainers (imagen `postgres:16`, no bitnami)
+  coverage: not-configured
+  linter: not-configured
+  formatter: not-configured
+  type_checker: javac (vía `mvn -q compile`)
+  e2e: none-planned
+  detected: 2026-11-18
+  detected_state: declared-target-only # no hay código ni pom.xml todavía
+  capabilities_file: openspec/testing-capabilities.md
+
+rules:
+  proposal:
+    - Incluir plan de rollback para cambios riesgosos.
+    - Declarar qué paquete de trabajo (W0–W10) cubre el cambio y su criterio verificable.
+    - Todo cambio que toque el enrutamiento de DataSources debe declarar cómo se medirá su evidencia.
+  specs:
+    - Usar Given/When/Then para los escenarios.
+    - Usar palabras clave RFC 2119 (MUST, SHALL, SHOULD, MAY).
+    - "Separar explícitamente los tres mecanismos: Eureka descubre procesos, LoadBalancer elige la instancia HTTP y el DataSource routing elige el nodo de base de datos."
+  design:
+    - Incluir diagramas de secuencia para flujos complejos (reserva de stock, lectura crítica, failover de réplica).
+    - Documentar cada decisión de arquitectura con su justificación (equivalente a ADR en docs/decisiones.md).
+    - Mantener la dependencia unidireccional servicio-pedidos → servicio-inventario.
+  tasks:
+    - Agrupar por paquete de trabajo (W0–W10) con numeración jerárquica.
+    - Mantener tareas completables en una sola sesión.
+  apply:
+    guidelines:
+      - No compartir entidades JPA ni clases de dominio entre módulos; solo contratos HTTP (DTOs por servicio).
+      - Cada servicio es dueño de su base y su esquema; prohibido JOIN o lectura de tablas ajenas.
+      - Ningún host o puerto fijo en el application.yml de los servicios; solo nombres lógicos vía LoadBalancer.
+      - Flyway apunta al DataSource del primario, nunca al RoutingDataSource.
+      - spring.jpa.open-in-view=false es obligatorio en los servicios de negocio.
+      - Sin secretos en el repositorio: .env ignorado, .env.example versionado.
+      - .gitattributes con `*.sh text eol=lf` para los scripts montados en contenedores Linux.
+    tdd: false # provisional; ver strict_tdd
+    test_command: mvn -q test
+  verify:
+    test_command: mvn -q verify
+    build_command: mvn -q -DskipTests package
+    coverage_threshold: 0
+    evidence_rules:
+      - Medir tiempo de detección y de recuperación, no solo el resultado final.
+      - Contrastar X-Data-Source con pg_stat_activity y log_statement=all; el header por sí solo es circular.
+      - Registrar replay_lag en el instante exacto de cada lectura crítica (P07).
+  archive:
+    - Advertir antes de fusionar deltas destructivos.
+    - Nunca modificar cambios ya archivados.
