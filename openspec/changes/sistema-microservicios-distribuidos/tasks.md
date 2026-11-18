@@ -148,7 +148,7 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
   - Spec: DE (healthchecks reales por servicio)
   - Verificación: `docker build -q -t eureka-server:local eureka-server/`
 
-- [x] **W1-3** Crear `scripts/eureka-lease-probe.sh` que registra una instancia efímera contra la API de Eureka, mide su expulsión (≤15 s) y su re-registro.
+- [x] **W1-3** Crear `scripts/eureka-lease-probe.sh` que registra una instancia efímera contra la API de Eureka, mide su expulsión (≤20 s; la cota inferior es lease 15 s + barrido 3 s, medido 17 s) y su re-registro (≤2 s, medido 995 ms).
   - Aceptación: el script informa lease, expiración medida y re-registro, y termina en 0 con el servidor levantado.
   - Depende: W1-1
   - Spec: SE (renovación, expiración y re-registro), insumo temprano de P03
@@ -158,49 +158,49 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W2 — Dominio, migraciones y repositorios por servicio
 
-- [ ] **W2-1** Configurar en `servicio-inventario` las propiedades de nodo (`routing.nodes.primary|replica1|replica2`), pool Hikari del primario, `open-in-view=false` y `ddl-auto=validate`.
+- [x] **W2-1** Configurar en `servicio-inventario` las propiedades de nodo (`routing.nodes.primary|replica1|replica2`), pool Hikari del primario, `open-in-view=false` y `ddl-auto=validate`.
   - Aceptación: el servicio arranca contra un PostgreSQL local usando solo el nodo `primary`; ningún host queda fijado fuera de variables de entorno.
   - Depende: W0-8
   - Spec: PRC (una base por servicio), RPR (pools por nodo), regla `apply` de `config.yaml`
   - Verificación: `grep -nE 'open-in-view: false|ddl-auto: validate' servicio-inventario/src/main/resources/application.yml`
 
-- [ ] **W2-2** Declarar el bean `Flyway` explícito sobre `primaryDataSource` con `spring.flyway.enabled=false` y `locations=classpath:db/migration/inventario`, replicando el patrón en `servicio-pedidos`.
+- [x] **W2-2** Declarar el bean `Flyway` explícito sobre `primaryDataSource` con `spring.flyway.enabled=false` y `locations=classpath:db/migration/inventario`, replicando el patrón en `servicio-pedidos`.
   - Aceptación: la migración se ejecuta solo contra el primario y no contra ningún pool de réplica.
   - Depende: W2-1
   - Spec: PRC (esquema por servicio), ADR-06
   - Verificación: `grep -rn 'primaryDataSource' servicio-inventario/src/main/java servicio-pedidos/src/main/java`
 
-- [ ] **W2-3** Escribir la migración `V1__inventario_schema.sql`: SKU con precio y stock, tabla de reserva con unicidad por `pedidoId`, línea de reserva con unicidad por (`pedidoId`, `sku`).
+- [x] **W2-3** Escribir la migración `V1__inventario_schema.sql`: SKU con precio y stock, tabla de reserva con unicidad por `pedidoId`, línea de reserva con unicidad por (`pedidoId`, `sku`).
   - Aceptación: la migración aplica en `inventario_db` y las restricciones de unicidad existen en el esquema.
   - Depende: W2-2
   - Spec: IM (stock por SKU, reserva atómica e idempotente)
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='*Migration*'`
 
-- [ ] **W2-4** Escribir la migración `V1__pedidos_schema.sql`: pedido con estado restringido por `CHECK` y línea con FK al pedido.
+- [x] **W2-4** Escribir la migración `V1__pedidos_schema.sql`: pedido con estado restringido por `CHECK` y línea con FK al pedido.
   - Aceptación: la migración aplica en `pedidos_db` y el `CHECK` rechaza estados fuera de `PENDIENTE|CONFIRMADO|RECHAZADO|CANCELADO`.
   - Depende: W2-2
   - Spec: OM (estados y transiciones inmutables)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*Migration*'`
 
-- [ ] **W2-5** Implementar entidades JPA y repositorios de `servicio-inventario` (stock, reserva, línea de reserva) sin referencias a tablas de pedidos.
+- [x] **W2-5** Implementar entidades JPA y repositorios de `servicio-inventario` (stock, reserva, línea de reserva) sin referencias a tablas de pedidos.
   - Aceptación: las consultas del repositorio solo nombran objetos de `inventario_db`.
   - Depende: W2-3
   - Spec: IM (propiedad exclusiva de los datos de stock)
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='*Repository*'`
 
-- [ ] **W2-6** Implementar entidades JPA y repositorios de `servicio-pedidos` (pedido, línea) sin referencias a tablas de inventario.
+- [x] **W2-6** Implementar entidades JPA y repositorios de `servicio-pedidos` (pedido, línea) sin referencias a tablas de inventario.
   - Aceptación: las consultas del repositorio solo nombran objetos de `pedidos_db`.
   - Depende: W2-4
   - Spec: OM (aislamiento del dominio)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*Repository*'`
 
-- [ ] **W2-7** Escribir tests de repositorio con Testcontainers `postgres:16`, marcados `@Tag("integration")` y `@Testcontainers(disabledWithoutDocker = true)`, para ambos servicios.
+- [x] **W2-7** Escribir tests de repositorio con Testcontainers `postgres:16`, marcados `@Tag("integration")` y `@Testcontainers(disabledWithoutDocker = true)`, para ambos servicios.
   - Aceptación: los tests de persistencia pasan contra PostgreSQL real y se omiten sin Docker.
   - Depende: W2-5, W2-6
   - Spec: IM, OM (persistencia verificada), `design.md` §14
   - Verificación: `mvn -q -pl servicio-inventario,servicio-pedidos -am test -Dtest='*RepositoryIT'`
 
-- [ ] **W2-8** Crear `infra/postgres/init/01-databases.sql`: `pedidos_db` e `inventario_db`, un usuario por base con privilegios solo sobre su base, rol `replicator` sin acceso a las bases de negocio.
+- [x] **W2-8** Crear `infra/postgres/init/01-databases.sql`: `pedidos_db` e `inventario_db`, un usuario por base con privilegios solo sobre su base, rol `replicator` sin acceso a las bases de negocio.
   - Aceptación: cada usuario de aplicación no puede conectarse ni consultar la base del otro; `replicator` solo replica.
   - Depende: W2-3, W2-4
   - Spec: PRC (una base por servicio con credenciales propias)

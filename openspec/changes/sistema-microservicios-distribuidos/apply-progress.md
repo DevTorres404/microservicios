@@ -108,3 +108,107 @@ múltiples casos por comportamiento. Refactor: no fue necesario; el código es m
 - Los módulos `gateway`, `servicio-pedidos`, `servicio-inventario` están vacíos a propósito: su
   comportamiento es W2–W5.
 - `libs/persistence-routing` contiene hoy solo `DataSourceKey`; el resto del núcleo es W6.
+
+---
+
+# W2 — Dominio, migraciones y repositorios por servicio
+
+Slice aplicado: **W2** (modelo de dominio, migraciones Flyway y repositorios de `servicio-inventario`
+y `servicio-pedidos`). Ejecutado el **2026-11-18** sobre
+`feature/sistema-microservicios-distribuidos`, sin remoto, push ni PR.
+
+Modo de implementación: **Strict TDD** (`strict_tdd: true`). Cada comportamiento nuevo tiene un RED
+observado antes de la implementación.
+
+## 7. Tareas completadas
+
+| Tarea | Estado | Evidencia observada |
+| :-- | :-- | :-- |
+| W2-1 Propiedades de nodo, pool Hikari y `ddl-auto=validate` en inventario | ✅ | `application.yml` con `open-in-view: false`, `ddl-auto: validate`, `spring.flyway.enabled: false`, `routing.nodes.primary\|replica1\|replica2` solo por variables de entorno |
+| W2-2 Bean `Flyway` explícito sobre `primaryDataSource` en ambos servicios | ✅ | `FlywayConfig` + `PrimaryDataSourceConfig`; `flyway.getConfiguration().getDataSource()` `isSameAs(primaryDataSource)` verde en ambos `*MigrationIT` |
+| W2-3 `V1__inventario_schema.sql` | ✅ | `InventoryMigrationIT` GREEN 6/6; `uq_reservations_order`, `uq_reservation_lines_order_sku` y CHECKs verificados |
+| W2-4 `V1__pedidos_schema.sql` | ✅ | `PedidosMigrationIT` GREEN 6/6; `ck_orders_status` rechaza `ENVIADO`, `fk_order_lines_order` rechaza huérfanas |
+| W2-5 Entidades y repositorios de inventario | ✅ | `InventarioRepositoryIT` GREEN 10/10 (atomicidad, idempotencia, liberación, concurrencia) |
+| W2-6 Agregado `Order` y repositorio de pedidos | ✅ | `OrderDomainTest` GREEN 9/9 y `PedidosRepositoryIT` GREEN 8/8 |
+| W2-7 Tests de repositorio con `postgres:16`, `@Tag("integration")` y skip sin Docker | ✅ | `mvn -pl servicio-inventario,servicio-pedidos -am test -Dtest='*RepositoryIT'` → 18 tests, 0 fallos |
+| W2-8 `infra/postgres/init/01-databases.sql` | ✅ | Contenedor `postgres:16`: dueños correctos, `pg_roles.rolreplication = t`, CONNECT cruzado denegado, `replicator` denegado en ambas bases, guardia de password ausente exit 3 |
+
+## 8. Comandos ejecutados y resultado observado
+
+| Comando | Resultado |
+| :-- | :-- |
+| `mvn -q -pl servicio-inventario -am test -Dtest='InventarioRepositoryIT' -DfailIfNoSpecifiedTests=false` (RED) | exit ≠ 0 — `package com.example.microservicios.inventario.domain does not exist` |
+| mismo comando (GREEN) | exit 0 — `Tests run: 10, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='PedidosRepositoryIT,OrderDomainTest' -DfailIfNoSpecifiedTests=false` (RED) | exit ≠ 0 — `package ...pedidos.domain / .exception / .repository does not exist` |
+| mismo comando (GREEN) | exit 0 — `OrderDomainTest 9/9`, `PedidosRepositoryIT 8/8` |
+| `mvn -q -pl servicio-inventario,servicio-pedidos -am test -Dtest='*RepositoryIT' -DfailIfNoSpecifiedTests=false` | exit 0 — `InventarioRepositoryIT 10/10`, `PedidosRepositoryIT 8/8` |
+| `mvn -q -pl servicio-inventario,servicio-pedidos -am test` | exit 0 — **39 tests**, 0 fallos (10 + 6 + 9 + 6 + 8) |
+| `docker run … postgres:16` con `01-databases.sql` | init OK; `pedidos_app→pedidos_db` y `inventario_app→inventario_db` conectan; los cuatro cruces `exit=2 permission denied for database` |
+| `docker run … postgres:16` sin `PEDIDOS_APP_PASSWORD` | exit 3 — `division by zero` en la guardia `pedidos_password_is_required` |
+| `grep -cE 'CREATE (DATABASE\|ROLE\|USER)' infra/postgres/init/01-databases.sql` | `5` (3 roles + 2 bases) |
+
+## 9. TDD Cycle Evidence (Strict TDD)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| W2-3 | `servicio-inventario/…/InventoryMigrationIT.java` | Integration (Testcontainers) | N/A (nuevo) | ✅ Escrito antes del SQL y de `InventarioApplication`; `Unable to find a @SpringBootConfiguration` | ✅ 6/6 | ✅ 6 casos (tablas, CHECKs, FKs, índices, idempotencia, ausencia de tablas de pedidos) | ✅ Sin cambios |
+| W2-4 | `servicio-pedidos/…/PedidosMigrationIT.java` | Integration (Testcontainers) | N/A (nuevo) | ✅ `Unable to find a @SpringBootConfiguration` | ✅ 6/6 | ✅ 6 casos (tablas, estado, total, FK, índices, idempotencia) | ✅ Sin cambios |
+| W2-5 | `servicio-inventario/…/InventarioRepositoryIT.java` | Integration (Testcontainers) | N/A (nuevo) | ✅ Compilación falla: `package …domain/exception/repository/reservation does not exist` | ✅ 10/10 | ✅ 10 casos: decremento condicional, reserva completa, rollback, idempotencia, conflicto, validación, **dos hilos sin sobreventa**, liberación única, reserva liberada | ✅ `ReservationService` separado en `reserve`/`release`/`replayOrConflict` |
+| W2-6 | `servicio-pedidos/…/OrderDomainTest.java` + `PedidosRepositoryIT.java` | Unit + Integration (Testcontainers) | N/A (nuevo) | ✅ Compilación falla: faltan `domain`, `exception` y `repository` | ✅ 9/9 + 8/8 | ✅ 17 casos: estado inicial, total cero, rechazos de entrada, total solo con precios de inventario, redondeo HALF_UP, estructura sin precio del cliente, round-trip, filtro por estado, CHECKs, cascada | ✅ Entidad `OrderLine` extraída del agregado |
+| W2-7 | ambos `*RepositoryIT` | Integration | Ya verdes por clase; el comando cruzado destapó un defecto de ciclo de vida (ver §11) | ✅ Ejecución conjunta falló: contexto Spring cacheado apuntando al puerto muerto | ✅ 18/18 con contenedor iniciado en inicializador estático | ✅ Dos módulos, dos bases independientes | ✅ `AbstractPostgresIntegrationTest` de ambos módulos |
+| W2-1 / W2-2 / W2-8 | N/A (configuración y artefacto de infraestructura) | N/A | N/A | ✗ Sin comportamiento de dominio nuevo | ✅ Verificación por comando (§8) | ✅ Dos servicios + guardia negativa del script | ✅ Sin cambios |
+
+**Test summary**: 39 tests escritos en W2 (25 de integración con PostgreSQL real, 9 unitarios de
+dominio, 6+6 de migración ya contados arriba), todos verdes. Ningún uso de H2.
+
+## 10. Work Unit Evidence
+
+| Unidad | Comando focalizado y resultado | Arnés de ejecución | Frontera de rollback |
+| :-- | :-- | :-- | :-- |
+| Dependencias de build (JPA, Flyway, PostgreSQL, Testcontainers, Surefire `*IT.java`) | `mvn -q -pl servicio-inventario,servicio-pedidos -am test` → exit 0 | N/A: resolución de dependencias | `pom.xml` raíz y los dos `pom.xml` de servicio |
+| Inventario: esquema + dominio + repositorios | `InventarioRepositoryIT` → 10/10 y `InventoryMigrationIT` → 6/6 | `postgres:16` real vía Testcontainers; dos hilos compiten por la última unidad | `servicio-inventario/src/main/java/com/example/microservicios/inventario/{domain,exception,repository,reservation}`, `.../resources/application.yml`, `.../db/migration/inventario` y sus tests |
+| Pedidos: esquema + agregado + repositorio | `OrderDomainTest` → 9/9 y `PedidosRepositoryIT` → 8/8 | `postgres:16` real vía Testcontainers; round-trip del agregado y CHECKs de la base | `servicio-pedidos/src/main/java/com/example/microservicios/pedidos/{domain,exception,repository}`, `.../resources/application.yml`, `.../db/migration/pedidos` y sus tests |
+| Infraestructura de bases y replicación | `docker run … postgres:16` + consultas de privilegios → cruces `exit=2`, guardia `exit=3` | Contenedor `postgres:16` real con el script montado en `/docker-entrypoint-initdb.d` | `infra/postgres/init/01-databases.sql` |
+
+## 11. Desviaciones y hallazgos
+
+1. **`order_lines.unit_price` es nullable.** `design.md` (§modelo de datos) define la migración en dos
+   transacciones: el pedido nace sin precios y el total se calcula con la respuesta de inventario. Un
+   `NOT NULL` obligaría a inventar precios o a diferir la escritura del pedido. `orders.total` sí es
+   `NOT NULL DEFAULT 0.00` y arranca en cero.
+2. **Estrategia de atomicidad de la reserva: decremento condicional, no lock pesimista.** Cada línea
+   ejecuta `UPDATE stock SET available = available - :qty WHERE sku = :sku AND available >= :qty` en
+   una sola sentencia dentro de una transacción. PostgreSQL serializa por lock de fila y reevalúa el
+   predicado; el perdedor obtiene `0` filas. Es la opción con menos contención y sin ventana
+   read-then-write. La liberación sí usa `SELECT … FOR UPDATE` más guarda de estado.
+3. **Idempotencia con `INSERT … ON CONFLICT (order_id) DO NOTHING`.** Un `persist` JPA con violación de
+   unicidad aborta la transacción y envenena el reintento; el `ON CONFLICT` convierte el duplicado en
+   un conteo de filas observable. El precio unitario se congela en `reservation_lines.unit_price` para
+   que el replay devuelva un total equivalente.
+4. **`@Container` retirado de `AbstractPostgresIntegrationTest`.** Los tres primeros comandos filtrados
+   ocultaban el defecto: la extensión JUnit detiene el contenedor estático al terminar cada clase y el
+   contexto Spring cacheado apuntaba al puerto muerto de la clase anterior. En la suite completa,
+   `PedidosRepositoryIT` falló 8/8 con `Connection refused` al puerto ya cerrado. Se corrigió iniciando
+   el contenedor en un inicializador estático (Ryuk lo elimina al salir la JVM) y la suite completa
+   quedó verde. Sin esta corrección, `mvn verify` habría sido no determinista según el orden de clases.
+5. **`-DfailIfNoSpecifiedTests=false`** es necesario al combinar `-Dtest=…` con `-am`, porque los
+   módulos de `libs/` no tienen tests que coincidan con el patrón. No cambia qué se ejecuta en los
+   módulos de servicio.
+6. **Surefire ejecuta `**/*IT.java`.** `design.md` §14 prohíbe Failsafe y fija Surefire como único
+   runner, por lo que el parent POM declara el `include` correspondiente.
+7. **Transiciones de estado del pedido no implementadas.** `confirmar`/`rechazar`/`cancelar` son W3-4 y
+   W3-5. Este slice garantiza solo el estado inicial `PENDIENTE` (y el vocabulario completo en el
+   `CHECK`), tal como pide W2-4/W2-6.
+
+## 12. Pendientes y riesgos (W2)
+
+- **W6-14 debe reutilizar** el patrón `Flyway` explícito + `EntityManagerFactoryDependsOnPostProcessor`
+  ya probado aquí; si W6 introduce `RoutingDataSource`, el bean debe seguir apuntando al primario.
+- **La liberación de stock no es atómica frente a la confirmación del pedido** (dos servicios, dos
+  bases). W4 asume compensación best-effort; el riesgo de stock restaurado dos veces ya está cerrado
+  por `SELECT … FOR UPDATE` + estado `LIBERADA`.
+- **`replicator` no se probó contra una conexión de replicación real** en W2-8: solo se verificó el
+  atributo `rolreplication` y la denegación de CONNECT. El streaming real es W7-2.
+- **Los repositorios no filtran por nodo**: el enrutamiento a réplicas es W6 y está deliberadamente
+  ausente.
+
