@@ -1,5 +1,6 @@
 package com.example.microservicios.pedidos.domain;
 
+import com.example.microservicios.pedidos.exception.IllegalStateTransitionException;
 import com.example.microservicios.pedidos.exception.InvalidOrderException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -118,6 +119,27 @@ public class Order {
             computed = computed.plus(unitPrice.times(line.getQuantity()));
         }
         this.total = computed.amount();
+    }
+
+    public void confirm() {
+        if (this.status != OrderStatus.PENDIENTE) {
+            throw new IllegalStateTransitionException(this.status, OrderStatus.CONFIRMADO);
+        }
+        this.status = OrderStatus.CONFIRMADO;
+    }
+
+    public void reject() {
+        if (this.status != OrderStatus.PENDIENTE) {
+            throw new IllegalStateTransitionException(this.status, OrderStatus.RECHAZADO);
+        }
+        this.status = OrderStatus.RECHAZADO;
+    }
+
+    public void cancel() {
+        if (this.status != OrderStatus.PENDIENTE && this.status != OrderStatus.CONFIRMADO) {
+            throw new IllegalStateTransitionException(this.status, OrderStatus.CANCELADO);
+        }
+        this.status = OrderStatus.CANCELADO;
     }
 
     public Long getId() {
