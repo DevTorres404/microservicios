@@ -1,0 +1,89 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 8s
+        pool:
+          type: ELASTIC
+          max-connections: 200
+          max-idle-time: 20s
+          acquire-timeout: 5s
+          max-pending-acquire: 100
+      routes:
+        - id: servicio-pedidos
+          uri: lb://servicio-pedidos
+          predicates:
+            - Path=/api/pedidos/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: pedidosCircuitBreaker
+                fallbackUri: forward:/fallback/pedidos
+            - name: Retry
+              args:
+                retries: 1
+                methods: GET
+                series: SERVER_ERROR
+                exceptions: java.io.IOException, java.util.concurrent.TimeoutException, org.springframework.cloud.gateway.support.TimeoutException
+        - id: servicio-inventario
+          uri: lb://servicio-inventario
+          predicates:
+            - Path=/api/inventario/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: inventarioCircuitBreaker
+                fallbackUri: forward:/fallback/inventario
+            - name: Retry
+              args:
+                retries: 1
+                methods: GET
+                series: SERVER_ERROR
+                exceptions: java.io.IOException, java.util.concurrent.TimeoutException, org.springframework.cloud.gateway.support.TimeoutException
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      pedidosCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+      inventarioCircuitBreaker:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://127.0.0.1:8761/eureka/}
+    fetchRegistry: true
+    registerWithEureka: true
+    registryFetchIntervalSeconds: 3
+  instance:
+    instance-id: ${spring.application.name}:${INSTANCE_ID:${HOSTNAME:local}}
+    preferIpAddress: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
