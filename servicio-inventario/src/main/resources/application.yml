@@ -40,13 +40,19 @@ spring:
   flyway:
     enabled: false
 
-# Database nodes of the replicated cluster. Values only for now: the pools and the routing core
-# that consume them are built in W6, and nothing in this slice reads them.
+# Database nodes of the replicated cluster.
 routing:
+  enabled: ${ROUTING_ENABLED:true}
   nodes:
     primary:
-      jdbc-url: ${DB_PRIMARY_JDBC_URL}
+      jdbc-url: ${DB_PRIMARY_JDBC_URL:${spring.datasource.url}}
+      username: ${DB_PRIMARY_USERNAME:${spring.datasource.username}}
+      password: ${DB_PRIMARY_PASSWORD:${spring.datasource.password}}
     replica1:
-      jdbc-url: ${DB_REPLICA1_JDBC_URL}
+      jdbc-url: ${DB_REPLICA1_JDBC_URL:${spring.datasource.url}}
+      username: ${DB_REPLICA1_USERNAME:${spring.datasource.username}}
+      password: ${DB_REPLICA1_PASSWORD:${spring.datasource.password}}
     replica2:
-      jdbc-url: ${DB_REPLICA2_JDBC_URL}
+      jdbc-url: ${DB_REPLICA2_JDBC_URL:${spring.datasource.url}}
+      username: ${DB_REPLICA2_USERNAME:${spring.datasource.username}}
+      password: ${DB_REPLICA2_PASSWORD:${spring.datasource.password}}

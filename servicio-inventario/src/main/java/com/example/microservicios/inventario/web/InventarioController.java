@@ -33,6 +33,7 @@ public class InventarioController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<StockResponse> listStock() {
         return stockRepository.findAllByOrderBySkuAsc().stream()
                 .map(StockResponse::from)
@@ -40,6 +41,7 @@ public class InventarioController {
     }
 
     @GetMapping("/{sku}")
+    @Transactional(readOnly = true)
     public ResponseEntity<StockResponse> getStock(@PathVariable String sku) {
         return stockRepository.findById(sku)
                 .map(StockResponse::from)

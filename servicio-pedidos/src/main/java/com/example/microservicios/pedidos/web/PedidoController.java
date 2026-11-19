@@ -4,6 +4,7 @@ import com.example.microservicios.pedidos.domain.Order;
 import com.example.microservicios.pedidos.domain.OrderStatus;
 import com.example.microservicios.pedidos.exception.OrderNotFoundException;
 import com.example.microservicios.pedidos.repository.OrderRepository;
+import com.example.microservicios.persistence.routing.CriticalRead;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,7 @@ public class PedidoController {
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
+    @CriticalRead
     public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));

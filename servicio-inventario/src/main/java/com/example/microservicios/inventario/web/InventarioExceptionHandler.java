@@ -51,6 +51,13 @@ public class InventarioExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(pd);
     }
 
+    @ExceptionHandler(com.example.microservicios.persistence.routing.DbNodeUnavailableException.class)
+    public ResponseEntity<ProblemDetail> handleDbNodeUnavailable(com.example.microservicios.persistence.routing.DbNodeUnavailableException ex, HttpServletRequest request) {
+        ProblemDetail pd = createProblemDetail(HttpStatus.SERVICE_UNAVAILABLE, "Database Node Unavailable", ex.getMessage(),
+                ex.code(), request);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
         ProblemDetail pd = createProblemDetail(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(),

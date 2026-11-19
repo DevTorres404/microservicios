@@ -262,43 +262,43 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W4 — Comunicación entre servicios, resiliencia y compensación
 
-- [ ] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
+- [x] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
   - Aceptación: la llamada se resuelve por nombre lógico y la configuración no contiene destinos fijos.
   - Depende: W3-2, W3-3, W1-1
   - Spec: ISC (llamada real por nombre lógico), SE (localización exclusiva por nombre lógico)
   - Verificación: `grep -rn 'servicio-inventario' servicio-pedidos/src/main/java | grep -q FeignClient`
 
-- [ ] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
+- [x] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
   - Aceptación: una dependencia bloqueada produce fallo acotado dentro de 2 s y no reintenta errores de negocio.
   - Depende: W4-1
   - Spec: ISC (timeout explícito y acotado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*FeignTimeout*'`
 
-- [ ] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
+- [x] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
   - Aceptación: con inventario caído, la llamada falla rápido sin tocar la red y el cliente recibe 503 tipado con `correlationId`.
   - Depende: W4-2
   - Spec: ISC (circuit breaker, error tipado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*CircuitBreaker*'`
 
-- [ ] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
+- [x] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
   - Aceptación: stock suficiente confirma y descuenta exactamente lo pedido; una línea insuficiente no descuenta ningún SKU.
   - Depende: W4-3, W3-5
   - Spec: OM (reserva atómica, rechazo por stock), ISC (consistencia sin transacción distribuida)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoCreation*'`
 
-- [ ] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
+- [x] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
   - Aceptación: el pedido permanece en un estado honesto, la reserva aplicada se libera y un fallo de liberación solo deja `WARN` y métrica.
   - Depende: W4-4
   - Spec: ISC (compensación y consistencia), OM (cancelación con liberación best-effort)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*Compensation*'`
 
-- [ ] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
+- [x] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
   - Aceptación: dos llamadas con el mismo `pedidoId` dejan el stock igual y la segunda respuesta es equivalente a la primera.
   - Depende: W4-4, W3-2
   - Spec: IM (idempotencia de la reserva), ISC (reintento no duplica consumo)
   - Verificación: `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*Idempotency*'`
 
-- [ ] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
+- [x] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
   - Aceptación: el script termina en 0 y falla si aparece cualquiera de las tres violaciones.
   - Depende: W4-1, W2-8
   - Spec: OM (aislamiento del dominio), IM (propiedad exclusiva), SE (sin destinos fijos), reglas `apply` de `config.yaml`
@@ -350,121 +350,121 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 Ciclo RED→GREEN explícito: las tareas de test preceden a su implementación. Las tareas W6-1 a W6-10 son unitarias sobre el módulo; W6-11 a W6-20 son el cableado por servicio.
 
-- [ ] **W6-1** Escribir (RED) `ReplicaSelectorTest`: round-robin determinista alternando `REPLICA_1`/`REPLICA_2`, lista vacía devuelve `PRIMARY`, cursor tras cambio de salud y ausencia de índice fuera de rango con cambios concurrentes.
+- [x] **W6-1** Escribir (RED) `ReplicaSelectorTest`: round-robin determinista alternando `REPLICA_1`/`REPLICA_2`, lista vacía devuelve `PRIMARY`, cursor tras cambio de salud y ausencia de índice fuera de rango con cambios concurrentes.
   - Aceptación: los cinco casos existen y fallan porque el selector aún no existe.
   - Depende: W0-9
   - Spec: RPR (lecturas con política propia y determinista), ADR-03
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaSelectorTest'`
 
-- [ ] **W6-2** Implementar (GREEN) `ReplicaSelector` con foto inmutable de réplicas `UP` y cursor `AtomicInteger` con `Math.floorMod`.
+- [x] **W6-2** Implementar (GREEN) `ReplicaSelector` con foto inmutable de réplicas `UP` y cursor `AtomicInteger` con `Math.floorMod`.
   - Aceptación: los casos de W6-1 pasan; con dos réplicas el desbalance es como máximo uno.
   - Depende: W6-1
   - Spec: RPR (round-robin determinista), `design.md` §5
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaSelectorTest'`
 
-- [ ] **W6-3** Escribir (RED) `ReplicaHealthRegistryTest`: `UP→DOWN` por timeout, `DOWN→PROBING→UP` con dos verdes consecutivos, exclusión si el receiver no está en `streaming`, métrica y causa registradas.
+- [x] **W6-3** Escribir (RED) `ReplicaHealthRegistryTest`: `UP→DOWN` por timeout, `DOWN→PROBING→UP` con dos verdes consecutivos, exclusión si el receiver no está en `streaming`, métrica y causa registradas.
   - Aceptación: los cinco casos existen y fallan porque el registry aún no existe.
   - Depende: W0-9
   - Spec: RPR (exclusión por health check), PRC (reincorporación condicionada), ADR-02
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaHealthRegistryTest'`
 
-- [ ] **W6-4** Implementar (GREEN) `ReplicaHealthRegistry`: sondeo cada 5000 ms con timeout de 1000 ms, `SELECT 1` más `pg_stat_wal_receiver.status`, scheduling propio de 4 hilos y una tarea por nodo.
+- [x] **W6-4** Implementar (GREEN) `ReplicaHealthRegistry`: sondeo cada 5000 ms con timeout de 1000 ms, `SELECT 1` más `pg_stat_wal_receiver.status`, scheduling propio de 4 hilos y una tarea por nodo.
   - Aceptación: los casos de W6-3 pasan sin dormir el test (reloj inyectado) y la detección es ≤10 s.
   - Depende: W6-3
   - Spec: RPR (detección ≤10 s atribuida al sondeo), PRC (streaming requerido), `design.md` §6
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaHealthRegistryTest'`
 
-- [ ] **W6-5** Implementar `DataSourceContextHolder` con `ThreadLocal<Deque<DataSourceKey>>` (`push`, `pop`, `peek`, `clear`) y su test de anidamiento y simetría.
+- [x] **W6-5** Implementar `DataSourceContextHolder` con `ThreadLocal<Deque<DataSourceKey>>` (`push`, `pop`, `peek`, `clear`) y su test de anidamiento y simetría.
   - Aceptación: un `push` dentro de otro restaura la clave previa al salir y el hilo no conserva contexto tras el request.
   - Depende: W0-9
   - Spec: RPR (decisión por transacción), `design.md` §4.1
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='DataSourceContextHolderTest'`
 
-- [ ] **W6-6** Implementar `RoutingDataSource` con mapa de las tres claves, `defaultTargetDataSource=primary` y `lenientFallback=false`, con test de clave desconocida que falla de forma ruidosa.
+- [x] **W6-6** Implementar `RoutingDataSource` con mapa de las tres claves, `defaultTargetDataSource=primary` y `lenientFallback=false`, con test de clave desconocida que falla de forma ruidosa.
   - Aceptación: clave nula resuelve a primario; clave no nula desconocida lanza excepción en lugar de desviarse.
   - Depende: W6-5
   - Spec: RPR (la decisión corresponde al tipo de operación)
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='RoutingDataSourceTest'`
 
-- [ ] **W6-7** Escribir (RED) `ReadWriteRoutingAspectTest` con la tabla de precedencia completa: escritura, `readOnly=true`, `readOnly+@CriticalRead`, `@CriticalRead` sin transacción, sin transacción ni anotación y todas las réplicas caídas.
+- [x] **W6-7** Escribir (RED) `ReadWriteRoutingAspectTest` con la tabla de precedencia completa: escritura, `readOnly=true`, `readOnly+@CriticalRead`, `@CriticalRead` sin transacción, sin transacción ni anotación y todas las réplicas caídas.
   - Aceptación: los seis casos de §4.2 existen y fallan antes del aspecto.
   - Depende: W6-2, W6-4, W6-6
   - Spec: RPR (escrituras en primario, lecturas en réplica, crítica en primario, degradado)
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReadWriteRoutingAspectTest'`
 
-- [ ] **W6-8** Implementar (GREEN) `ReadWriteRoutingAspect` interceptando `@Transactional` a nivel de método y de clase, escribiendo la clave y haciendo `pop()` en `finally`.
+- [x] **W6-8** Implementar (GREEN) `ReadWriteRoutingAspect` interceptando `@Transactional` a nivel de método y de clase, escribiendo la clave y haciendo `pop()` en `finally`.
   - Aceptación: los seis casos de W6-7 pasan y el contexto queda limpio al salir del método.
   - Depende: W6-7
   - Spec: RPR (precedencia de decisión), `design.md` §4.2
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='ReadWriteRoutingAspectTest'`
 
-- [ ] **W6-9** Implementar la anotación `@CriticalRead` (solo en método) y su test de lista blanca: únicamente `GET /api/pedidos/{id}` y la lectura de precio previa a reservar pueden portarla.
+- [x] **W6-9** Implementar la anotación `@CriticalRead` (solo en método) y su test de lista blanca: únicamente `GET /api/pedidos/{id}` y la lectura de precio previa a reservar pueden portarla.
   - Aceptación: el test falla si aparece un método anotado fuera de la lista acordada.
   - Depende: W6-8, W3-3
   - Spec: RPR (lectura crítica), ADR-07 (barreras 2 y 4)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='CriticalReadWhitelistTest'`
 
-- [ ] **W6-10** Fijar el orden de interceptores con `@EnableTransactionManagement(order = N)` y precedencia del aspecto **interna** a la del interceptor transaccional, con test guardián que falla si el orden se invierte.
+- [x] **W6-10** Fijar el orden de interceptores con `@EnableTransactionManagement(order = N)` y precedencia del aspecto **interna** a la del interceptor transaccional, con test guardián que falla si el orden se invierte.
   - Aceptación: el test guardián pasa con el orden correcto y falla explícitamente si el aspecto queda fuera de la transacción; una lectura cae en réplica y una escritura en primario.
   - Depende: W6-8
   - Spec: RPR (coherencia entre declaración y nodo real), `design.md` §4.4 — sin este orden todas las lecturas caen al primario sin error visible
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='RoutingOrderGuardTest'`
 
-- [ ] **W6-11** Implementar los tres `HikariDataSource` por nodo (`connectionTimeout=2000`, `validationTimeout=1000`, `initializationFailTimeout=-1`, `maximumPoolSize` acotado, `ApplicationName=<instancia>`).
+- [x] **W6-11** Implementar los tres `HikariDataSource` por nodo (`connectionTimeout=2000`, `validationTimeout=1000`, `initializationFailTimeout=-1`, `maximumPoolSize` acotado, `ApplicationName=<instancia>`).
   - Aceptación: los tres pools se crean aunque una réplica esté caída y el arranque del servicio no falla.
   - Depende: W2-1
   - Spec: RPR (exclusión por sondeo), `design.md` §4.5, `design.md` §13
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='DataSourcePoolConfigTest'`
 
-- [ ] **W6-12** Exponer `LazyConnectionDataSourceProxy` envolviendo el `RoutingDataSource` como bean `dataSource` consumido por JPA, con test que demuestra que no se adquiere conexión física antes de la primera sentencia.
+- [x] **W6-12** Exponer `LazyConnectionDataSourceProxy` envolviendo el `RoutingDataSource` como bean `dataSource` consumido por JPA, con test que demuestra que no se adquiere conexión física antes de la primera sentencia.
   - Aceptación: la conexión no se abre al iniciar la transacción y sí al emitir la primera sentencia.
   - Depende: W6-6, W6-11
   - Spec: RPR (la decisión se resuelve antes de emitir la sentencia), `design.md` §4.3
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='LazyDataSourceProxyTest'`
 
-- [ ] **W6-13** Cablear el módulo de routing en `servicio-inventario`: configuración de pools, `RoutingDataSource`, proxy perezoso y propiedad `routing.enabled=true`.
+- [x] **W6-13** Cablear el módulo de routing en `servicio-inventario`: configuración de pools, `RoutingDataSource`, proxy perezoso y propiedad `routing.enabled=true`.
   - Aceptación: el servicio arranca con los tres nodos declarados y las lecturas de `GET /api/inventario` informan una réplica.
   - Depende: W6-12, W3-1
   - Spec: RPR (lecturas en réplica), IM (consulta de stock en réplica)
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='*RoutingWiring*'`
 
-- [ ] **W6-14** Cablear el módulo de routing en `servicio-pedidos`, incluyendo el `EntityManagerFactoryDependsOnPostProcessor` que ordena la migración antes de `ddl-auto=validate`.
+- [x] **W6-14** Cablear el módulo de routing en `servicio-pedidos`, incluyendo el `EntityManagerFactoryDependsOnPostProcessor` que ordena la migración antes de `ddl-auto=validate`.
   - Aceptación: Flyway migra contra el primario y la validación de esquema corre después, sin tocar réplicas.
   - Depende: W6-12, W2-2, W3-3
   - Spec: RPR, ADR-06, OM (aislamiento del dominio)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*RoutingWiring*'`
 
-- [ ] **W6-15** Implementar el modo degradado: selector sin réplicas `UP` devuelve `PRIMARY`, emite `WARN` una sola vez por entrada al modo e incrementa `db_routing_degraded_total`, sin error al cliente.
+- [x] **W6-15** Implementar el modo degradado: selector sin réplicas `UP` devuelve `PRIMARY`, emite `WARN` una sola vez por entrada al modo e incrementa `db_routing_degraded_total`, sin error al cliente.
   - Aceptación: con ambas réplicas `DOWN`, el 100 % de las lecturas ordinarias responde desde el primario con un único `WARN` por transición.
   - Depende: W6-2, W6-4
   - Spec: RPR (modo degradado hacia el primario), P06b
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='DegradedModeTest'`
 
-- [ ] **W6-16** Publicar las métricas Micrometer `db_routing_total{node,outcome}`, `db_routing_degraded_total`, `replica_health{node}`, `replica_probe_duration_seconds` y `critical_read_total`, y `RoutingDecisionRecorder` para headers y logs.
+- [x] **W6-16** Publicar las métricas Micrometer `db_routing_total{node,outcome}`, `db_routing_degraded_total`, `replica_health{node}`, `replica_probe_duration_seconds` y `critical_read_total`, y `RoutingDecisionRecorder` para headers y logs.
   - Aceptación: tras una lectura y una escritura, `/actuator/prometheus` muestra el nodo de cada decisión y el gauge de salud de ambas réplicas.
   - Depende: W6-8, W6-4
   - Spec: RPR (evidencia no circular, soporte), `design.md` §13
   - Verificación: `mvn -q -pl libs/persistence-routing -am test -Dtest='RoutingMetricsTest'`
 
-- [ ] **W6-17** Implementar el header `X-Data-Source` y la línea de log estructurada por request (`correlationId`, `service`, `instanceId`, `routingKey`, `txReadOnly`, `criticalRead`, `sql`, `durationMs`, `outcome`).
+- [x] **W6-17** Implementar el header `X-Data-Source` y la línea de log estructurada por request (`correlationId`, `service`, `instanceId`, `routingKey`, `txReadOnly`, `criticalRead`, `sql`, `durationMs`, `outcome`).
   - Aceptación: cada request de lectura y escritura emite header y línea de log con la clave de nodo decidida.
   - Depende: W6-16
   - Spec: RPR (evidencia contrastable), EE (evidencia generada por script)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*RoutingLogTest'`
 
-- [ ] **W6-18** Implementar la democión inmediata del nodo cuando un pool falla al prestar conexión (`markDown(key,"connection-refused")`) y el error tipado `503 DB_NODE_UNAVAILABLE`, sin reintento dentro de la transacción.
+- [x] **W6-18** Implementar la democión inmediata del nodo cuando un pool falla al prestar conexión (`markDown(key,"connection-refused")`) y el error tipado `503 DB_NODE_UNAVAILABLE`, sin reintento dentro de la transacción.
   - Aceptación: un fallo de pool excluye el nodo para el siguiente request y el request afectado recibe 503 tipado.
   - Depende: W6-4, W6-11
   - Spec: RPR (exclusión no atribuida a la consulta), `design.md` §5
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='NodeDemotionTest'`
 
-- [ ] **W6-19** Implementar el interruptor de rollback `routing.enabled` (por defecto `true`): con `false` el aspecto no se registra y todo el tráfico va al primario.
+- [x] **W6-19** Implementar el interruptor de rollback `routing.enabled` (por defecto `true`): con `false` el aspecto no se registra y todo el tráfico va al primario.
   - Aceptación: con `routing.enabled=false` el servicio sigue funcional y el 100 % de las operaciones usa el primario.
   - Depende: W6-13, W6-14
   - Spec: RPR, plan de rollback del proposal, `design.md` §18
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='RoutingDisabledTest'`
 
-- [ ] **W6-20** Escribir el test de integración con Testcontainers del cableado completo: lectura ordinaria en `REPLICA_*`, escritura en `PRIMARY`, `@CriticalRead` en `PRIMARY`, contraste con `X-Data-Source` y log de decisión.
+- [x] **W6-20** Escribir el test de integración con Testcontainers del cableado completo: lectura ordinaria en `REPLICA_*`, escritura en `PRIMARY`, `@CriticalRead` en `PRIMARY`, contraste con `X-Data-Source` y log de decisión.
   - Aceptación: los cuatro tipos de operación coinciden con el nodo declarado y con la conexión observada.
   - Depende: W6-13, W6-14, W6-17
   - Spec: RPR (coherencia entre declaración y nodo real)

@@ -422,3 +422,86 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los filtros 
 
 - **W6 — Routing de persistencia (`libs/persistence-routing`)**: Implementación del selector round-robin determinista (`ReplicaSelector`), registro de salud (`ReplicaHealthRegistry`), proxy transaccional perezoso (`LazyConnectionDataSourceProxy`), aspecto `@CriticalRead` y cableado por servicio con pool primario y réplicas.
 
+
+
+---
+
+# Apply progress — Slice W6: Persistence Routing (`libs/persistence-routing` and wiring)
+
+Slice aplicado: **W6** (módulo `libs/persistence-routing`, selector round-robin, registro de salud y sondeo, aspecto `@CriticalRead`, modo degradado, métricas, democión de nodos, cableado con `LazyConnectionDataSourceProxy` y tests de integración con Testcontainers).
+Ejecutado el **2026-11-18** sobre `feature/sistema-microservicios-distribuidos`.
+
+Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los componentes fueron desarrollados siguiendo el ciclo RED -> GREEN -> REFACTOR.
+
+## 31. Tareas completadas (W6)
+
+| Tarea | Estado | Evidencia observada |
+| :-- | :-- | :-- |
+| W6-1 Escribir (RED) `ReplicaSelectorTest` | ✅ | RED observable: 5/5 pruebas fallando antes de implementar el selector |
+| W6-2 Implementar (GREEN) `ReplicaSelector` | ✅ | `ReplicaSelectorTest` 5/5 verdes: round-robin alternado, fallback a PRIMARY en lista vacía, cursor consistente |
+| W6-3 Escribir (RED) `ReplicaHealthRegistryTest` | ✅ | RED observable: 5/5 pruebas fallando antes de implementar el registro de salud |
+| W6-4 Implementar (GREEN) `ReplicaHealthRegistry` | ✅ | `ReplicaHealthRegistryTest` 5/5 verdes: estados `UP->DOWN`, `DOWN->PROBING->UP` con 2 éxitos consecutivos, sondeo configurable |
+| W6-5 Implementar `DataSourceContextHolder` | ✅ | `DataSourceContextHolderTest` 3/3 verdes: simetría de pila `push/pop/peek`, limpieza con `clear()` |
+| W6-6 Implementar `RoutingDataSource` | ✅ | `RoutingDataSourceTest` 5/5 verdes: resolución de claves primario y réplicas, error ruidoso ante clave desconocida (`lenientFallback=false`) |
+| W6-7 Escribir (RED) `ReadWriteRoutingAspectTest` | ✅ | RED observable: 6/6 pruebas de precedencia fallando antes del aspecto |
+| W6-8 Implementar (GREEN) `ReadWriteRoutingAspect` | ✅ | `ReadWriteRoutingAspectTest` 6/6 verdes: precedencia `@CriticalRead` > `readOnly=true` > `readOnly=false`, limpieza en `finally` |
+| W6-9 Implementar `@CriticalRead` y whitelist | ✅ | `CriticalReadWhitelistTest` 1/1 verde: solo métodos autorizados portan la anotación en el dominio |
+| W6-10 Orden de interceptores transaccionales | ✅ | `RoutingOrderGuardTest` 1/1 verde: `@Order(100)` interno a la transacción de Spring |
+| W6-11 Tres `HikariDataSource` por nodo | ✅ | `DataSourcePoolConfigTest` 2/2 verdes: creación de pools primario y réplicas con timeouts acotados |
+| W6-12 `LazyConnectionDataSourceProxy` | ✅ | `LazyDataSourceProxyTest` 1/1 verde: adquisición diferida de conexión física hasta la primera sentencia SQL |
+| W6-13 Cablear persistencia en `servicio-inventario` | ✅ | `InventarioRoutingWiringTest` 2/2 verdes: autoconfiguración de datasource de routing, aspecto y resolución de réplica |
+| W6-14 Cablear persistencia en `servicio-pedidos` | ✅ | `PedidosRoutingWiringTest` 2/2 verdes: orden con Flyway, aspect y proxy perezoso |
+| W6-15 Modo degradado ante réplicas DOWN | ✅ | `DegradedModeTest` 2/2 verdes: fallback automático a PRIMARY con emisión única de WARN por transición |
+| W6-16 Métricas de routing y Prometheus | ✅ | `RoutingMetricsTest` 1/1 verde: `db_routing_total`, `replica_health`, `critical_read_total` |
+| W6-17 Header `X-Data-Source` y log estructurado | ✅ | `RoutingLogTest` 3/3 verdes: emisión de cabecera `X-Data-Source` y log estructurado por request |
+| W6-18 Democión inmediata por fallo de pool | ✅ | `NodeDemotionTest` 1/1 verde: `markDown` ante fallo y traducción a HTTP 503 `DB_NODE_UNAVAILABLE` |
+| W6-19 Interruptor `routing.enabled` | ✅ | `RoutingDisabledTest` 2/2 verdes: con `false` no se registra el aspecto y 100% de operaciones usan PRIMARY |
+| W6-20 Testcontainers IT de cableado completo | ✅ | `RoutingWiringIT` 2/2 verdes en ambos servicios (`servicio-pedidos` y `servicio-inventario`) contra PostgreSQL 16 real |
+
+## 32. Comandos ejecutados y resultado observado
+
+| Comando | Resultado |
+| :-- | :-- |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaSelectorTest'` | exit 0 — 5 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='ReplicaHealthRegistryTest'` | exit 0 — 5 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='DataSourceContextHolderTest'` | exit 0 — 3 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='RoutingDataSourceTest'` | exit 0 — 5 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='ReadWriteRoutingAspectTest'` | exit 0 — 6 tests verdes, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='CriticalReadWhitelistTest'` | exit 0 — 1 test verde, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='RoutingOrderGuardTest'` | exit 0 — 1 test verde, 0 fallos |
+| `mvn -q -pl servicio-inventario -am test -Dtest='DataSourcePoolConfigTest'` | exit 0 — 2 tests verdes, 0 fallos |
+| `mvn -q -pl servicio-inventario -am test -Dtest='LazyDataSourceProxyTest'` | exit 0 — 1 test verde, 0 fallos |
+| `mvn -q -pl servicio-inventario -am test -Dtest='*RoutingWiring*'` | exit 0 — 2 tests verdes, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*RoutingWiring*'` | exit 0 — 2 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='DegradedModeTest'` | exit 0 — 2 tests verdes, 0 fallos |
+| `mvn -q -pl libs/persistence-routing -am test -Dtest='RoutingMetricsTest'` | exit 0 — 1 test verde, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*RoutingLogTest'` | exit 0 — 3 tests verdes, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='NodeDemotionTest'` | exit 0 — 1 test verde, 0 fallos |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='RoutingDisabledTest'` | exit 0 — 2 tests verdes, 0 fallos |
+| `mvn test -pl servicio-pedidos,servicio-inventario -Dtest='RoutingWiringIT'` | exit 0 — 2/2 tests de integración completos con Testcontainers PostgreSQL 16 verdes |
+| `bash scripts/check-boundaries.sh` | exit 0 — 3/3 verificaciones arquitecturales pasadas (0 violaciones) |
+| `mvn test` | exit 0 — Suite completa del reactor en verde (6/6 módulos SUCCESS, 0 fallos, 0 errores) |
+
+## 33. TDD Cycle Evidence (Strict TDD)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| W6-1 / W6-2 | `ReplicaSelectorTest.java` | Routing Selector | N/A (nuevo) | ✅ Falla por ausencia de `ReplicaSelector` | ✅ 5/5 verdes | ✅ Alternancia, lista vacía, cursor tras cambios concurrentes, desbalance <= 1 | ✅ `AtomicInteger` + `Math.floorMod` para prevenir desbordamientos |
+| W6-3 / W6-4 | `ReplicaHealthRegistryTest.java` | Health Registry | N/A (nuevo) | ✅ Falla por ausencia de `ReplicaHealthRegistry` | ✅ 5/5 verdes | ✅ 5 casos: degradación por timeout, recuperación de dos pasos (`DOWN->PROBING->UP`), no-streaming | ✅ Manejo asíncrono con snapshot inmutable y prober desacoplado |
+| W6-5 | `DataSourceContextHolderTest.java` | Context Management | N/A (nuevo) | ✅ Falla por ausencia de holder | ✅ 3/3 verdes | ✅ Anidamiento `push/pop`, consulta `peek`, aislamiento de `ThreadLocal` | ✅ `Deque<DataSourceKey>` para soporte de transacciones anidadas |
+| W6-6 | `RoutingDataSourceTest.java` | Routing DataSource | N/A (nuevo) | ✅ Falla por clase inexistente | ✅ 5/5 verdes | ✅ Claves conocidas, clave nula a PRIMARY, fallo ruidoso ante clave desconocida (`lenientFallback=false`) | ✅ `determineCurrentLookupKey()` |
+| W6-7 / W6-8 | `ReadWriteRoutingAspectTest.java` | AOP Aspect | N/A (nuevo) | ✅ 6 casos de precedencia fallando | ✅ 6/6 verdes | ✅ Escritura a PRIMARY, `readOnly=true` a réplica, `@CriticalRead` a PRIMARY, degradado | ✅ `@Order(100)` y captura de contexto en `RoutingDecision` |
+| W6-15 | `DegradedModeTest.java` | Resilience / Degraded | N/A (nuevo) | ✅ Falla sin lógica de degradación | ✅ 2/2 verdes | ✅ Transición a degradado con emisión única de WARN, recuperación | ✅ Flag `AtomicBoolean` de transición y contador Micrometer |
+| W6-17 | `RoutingLogTest.java` | Web Filter & Logging | N/A (nuevo) | ✅ Falla por ausencia de cabecera y logs | ✅ 3/3 verdes | ✅ Cabecera `X-Data-Source`, log estructurado con `durationMs`, status de error | ✅ Extensión de `InstanceHeaderFilter` con `RoutingDecisionRecorder` |
+| W6-18 | `NodeDemotionTest.java` | Fault Tolerance | N/A (nuevo) | ✅ Falla sin excepción tipada | ✅ 1/1 verde | ✅ Fallo de préstamo de conexión excluye nodo y emite HTTP 503 `DB_NODE_UNAVAILABLE` | ✅ Handler centralizado con RFC 9457 ProblemDetail |
+| W6-20 | `RoutingWiringIT.java` | Full Integration | N/A (nuevo) | ✅ Falla antes de cableado completo | ✅ 2/2 verdes (en pedidos e inventario) | ✅ Write -> PRIMARY, CriticalRead -> PRIMARY, Read -> REPLICA_*, comprobación de headers y base real | ✅ Base de integración desacoplada con Testcontainers PostgreSQL 16 |
+
+## 34. Desviaciones y hallazgos
+
+1. **Configuración de Hibernate Metadata en Entornos de Test sin Docker**: Para evitar que Hibernate sondee metadatos del catálogo antes de tiempo al arrancar tests unitarios (`@SpringBootTest` con mocks), se fijó `spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults=false` y `spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect`.
+2. **Ciclo de vida del sondeo periódico en Integration Tests (`RoutingWiringIT`)**: Los tests de integración con un único contenedor PostgreSQL sin replicación física streaming activada detienen el planificador de sondeo (`stopPeriodicProbing()`) y fijan el estado saludable de las réplicas en `@BeforeEach` para comprobar el round-robin de lecturas sin interferencia de las sondas hacia tablas de replicación ausentes.
+3. **Mapeo explícito de transaccionalidad en endpoints de lectura**: Se anotaron `@Transactional(readOnly = true)` en los métodos `listStock()` y `getStock(sku)` de `InventarioController` para que el aspecto `ReadWriteRoutingAspect` intercepte la llamada a nivel de controlador antes de que Spring Data resuelva la conexión.
+
+## 35. Pendientes y próximos pasos (W7)
+
+- **W7 — Entorno Compose de 9 contenedores**: Creación del `docker-compose.yml` con topología completa de 3 nodos PostgreSQL (`primary`, `replica1`, `replica2`), replicación física por streaming, Eureka (`eureka-server`), Gateway (`gateway`), 2 instancias de `servicio-pedidos` y 2 instancias de `servicio-inventario`.
