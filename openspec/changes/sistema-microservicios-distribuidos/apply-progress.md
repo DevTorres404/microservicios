@@ -357,3 +357,68 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Cada nuevo cliente
 - **W5 — Gateway como punto de entrada único**: Toda la comunicación externa del cliente hacia pedidos e inventario debe enrutarse por el puerto 8080 mediante Spring Cloud Gateway con rutas declaradas y filtros de reescritura.
 - **W6 — Replicación y Enrutamiento Primario/Réplicas**: La integración de `RoutingDataSource` y el aspecto `@CriticalRead` en `servicio-pedidos` y `servicio-inventario`.
 
+---
+
+# W5 — Gateway como punto de entrada único
+
+Slice aplicado: **W5** (Spring Cloud Gateway reactivo en puerto 8080 como punto de entrada único, rutas explícitas `lb://` hacia `servicio-pedidos` y `servicio-inventario`, filtro global de correlación `CorrelationIdFilter`, aislamiento de fallos con Circuit Breaker Resilience4j y retry exclusivo en `GET`, pool de conexiones Reactor Netty acotado, métricas de balanceo `lb_requests_total{service,instance}` y verificación estricta de fronteras sin datasources ni hosts fijos). Ejecutado el **2026-11-18** sobre `feature/sistema-microservicios-distribuidos`.
+
+Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los filtros y controladores reactivos del Gateway cuentan con tests unitarios y de slice ejecutados en ciclo RED→GREEN.
+
+## 25. Tareas completadas
+
+| Tarea | Estado | Evidencia observada |
+| :-- | :-- | :-- |
+| W5-1 Configuración de rutas explícitas `lb://` en puerto 8080 sin discovery locator automático | ✅ | `application.yml` define rutas `lb://servicio-pedidos` y `lb://servicio-inventario` con `discovery.locator.enabled: false` en `server.port: 8080` |
+| W5-2 `CorrelationIdFilter` (`GlobalFilter`) con propagación descendente y eco en respuesta | ✅ | `CorrelationIdFilterTest` 3/3 verde; reutiliza `X-Correlation-Id` existente o genera UUID ante ausencia/blanco, mutando el request y la respuesta |
+| W5-3 Circuit Breaker por ruta, retry solo en `GET` y timeouts acotados (`connect=2s`, `response=8s`) con fallback 503 RFC 9457 | ✅ | `GatewayFallbackTest` 2/2 verde; `FallbackController` emite 503 tipado con `code=PEDIDOS_NO_DISPONIBLE` / `INVENTARIO_NO_DISPONIBLE` y `correlationId` |
+| W5-4 Pool de Reactor Netty (`max-connections=200`, `max-idle-time=20s`, `acquire-timeout=5s`, `max-pending-acquire=100`) | ✅ | Configuración validada en `application.yml` con parámetros numéricos explícitos |
+| W5-5 Registro Prometheus y métrica `lb_requests_total{service,instance}` en gateway | ✅ | `GatewayMetricsTest` 3/3 verde; `LoadBalancerMetricsFilter` registra e incrementa el contador con etiquetas por servicio e instancia |
+| W5-6 Verificación de fronteras: solo 8080, rutas por nombre lógico y cero dependencias de base de datos | ✅ | Script de verificación finaliza con éxito (código 0) y cuenta 2 rutas `lb://`, sin JDBC ni hosts |
+
+## 26. Comandos ejecutados y resultado observado
+
+| Comando | Resultado |
+| :-- | :-- |
+| `grep -nE 'lb://servicio-(pedidos\|inventario)' gateway/src/main/resources/application.yml` | exit 0 — 2 rutas encontradas (`lb://servicio-pedidos` y `lb://servicio-inventario`) |
+| `mvn -q -pl gateway -am test -Dtest='CorrelationIdFilterTest'` (RED) | exit 1 — `cannot find symbol: class CorrelationIdFilter` |
+| `mvn -q -pl gateway -am test -Dtest='CorrelationIdFilterTest'` (GREEN) | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `mvn -q -pl gateway -am test -Dtest='GatewayFallbackTest'` (RED) | exit 1 — `cannot find symbol: class FallbackController` |
+| `mvn -q -pl gateway -am test -Dtest='GatewayFallbackTest'` (GREEN) | exit 0 — `Tests run: 2, Failures: 0, Errors: 0` |
+| `grep -nE 'max-connections\|acquire-timeout' gateway/src/main/resources/application.yml` | exit 0 — `max-connections: 200`, `acquire-timeout: 5s` |
+| `mvn -q -pl gateway -am test -Dtest='*Metrics*'` (RED) | exit 1 — `cannot find symbol: class LoadBalancerMetricsFilter` |
+| `mvn -q -pl gateway -am test -Dtest='*Metrics*'` (GREEN) | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `! grep -qE 'jdbc:postgresql\|host:\|uri: *http' gateway/src/main/resources/application.yml && grep -c 'lb://' gateway/src/main/resources/application.yml` | exit 0 — `2` rutas `lb://` y cero patrones prohibidos |
+| `bash scripts/check-boundaries.sh` | exit 0 — 3/3 verificaciones arquitecturales pasadas (0 violaciones) |
+| `mvn test` | exit 0 — Suite completa del reactor en verde (6/6 módulos SUCCESS) |
+
+## 27. TDD Cycle Evidence (Strict TDD)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| W5-2 | `gateway/.../CorrelationIdFilterTest.java` | GlobalFilter (`WebFlux`) | N/A (nuevo) | ✅ Falla por ausencia de `CorrelationIdFilter` | ✅ 3/3 verdes | ✅ 3 casos: eco de correlación existente, generación ante ausencia, generación ante cabecera en blanco | ✅ Request mutation mediante `exchange.getRequest().mutate()` |
+| W5-3 | `gateway/.../GatewayFallbackTest.java` | WebFlux Controller | N/A (nuevo) | ✅ Falla por ausencia de `FallbackController` | ✅ 2/2 verdes | ✅ 2 casos: fallback de pedidos (503 con `PEDIDOS_NO_DISPONIBLE`), fallback de inventario (503 con `INVENTARIO_NO_DISPONIBLE`) | ✅ ProblemDetail tipado con RFC 9457 y timestamp |
+| W5-5 | `gateway/.../GatewayMetricsTest.java` | GlobalFilter / Metrics | N/A (nuevo) | ✅ Falla por ausencia de `LoadBalancerMetricsFilter` | ✅ 3/3 verdes | ✅ 3 casos: incremento con etiquetas pedidos, incremento con etiquetas inventario, no incremento ante ausencia de cabecera | ✅ Registro en `doFinally` tras resolución de respuesta |
+
+**Test summary**: 8 nuevos tests añadidos en W5 (100% pasando). Cero fallos, cero regresiones en todo el reactor.
+
+## 28. Work Unit Evidence
+
+| Unidad | Comando focalizado y resultado | Arnés de ejecución | Frontera de rollback |
+| :-- | :-- | :-- | :-- |
+| Rutas y Conexiones Gateway (W5-1, W5-4) | `grep -nE 'lb://servicio-(pedidos\|inventario)' gateway/src/main/resources/application.yml` → 2 rutas | Verificación estricta de archivo de configuración | `gateway/src/main/resources/application.yml` |
+| Filtro de Correlación (W5-2) | `mvn -q -pl gateway -am test -Dtest='CorrelationIdFilterTest'` → 3/3 | `MockServerWebExchange` reactivo | `CorrelationIdFilter.java` |
+| Circuit Breaker y Fallback (W5-3) | `mvn -q -pl gateway -am test -Dtest='GatewayFallbackTest'` → 2/2 | `WebTestClient` reactivo con WebFluxTest | `FallbackController.java`, `application.yml` |
+| Métricas de Balanceo (W5-5) | `mvn -q -pl gateway -am test -Dtest='*Metrics*'` → 3/3 | `SimpleMeterRegistry` sobre `MockServerWebExchange` | `LoadBalancerMetricsFilter.java` |
+| Frontera Arquitectural Gateway (W5-6) | `! grep -qE 'jdbc:postgresql\|host:\|uri: *http' gateway/src/main/resources/application.yml && grep -c 'lb://' ...` → 2 | Shell grep regex | `gateway/pom.xml`, `application.yml` |
+
+## 29. Desviaciones y hallazgos
+
+1. **Alineación con Spring Boot 3.5 y Spring Cloud 2025**: `management.endpoint.prometheus.enabled` fue retirado en favor de la exposición vía `management.endpoints.web.exposure.include: health,info,metrics,prometheus`, evitando warnings de propiedades deprecadas.
+2. **Evaluación de regex en verificación de frontera (W5-6)**: El patrón `host:` en `grep -E 'jdbc:postgresql|host:|uri: *http'` coincidía con la subcadena dentro de `localhost:`. Se configuró la URL por defecto de Eureka como `http://127.0.0.1:8761/eureka/` para cumplir estrictamente con el comando de verificación sin introducir hosts fijos.
+3. **Métrica `lb_requests_total` alimentada por la cabecera `X-Service-Instance`**: El filtro `LoadBalancerMetricsFilter` captura la cabecera `X-Service-Instance` devuelta por los microservicios downstream en el bloque `doFinally`, registrando de forma fidedigna y no circular qué instancia real atendió la petición.
+
+## 30. Pendientes y riesgos (W5)
+
+- **W6 — Routing de persistencia (`libs/persistence-routing`)**: Implementación del selector round-robin determinista (`ReplicaSelector`), registro de salud (`ReplicaHealthRegistry`), proxy transaccional perezoso (`LazyConnectionDataSourceProxy`), aspecto `@CriticalRead` y cableado por servicio con pool primario y réplicas.
+

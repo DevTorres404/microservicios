@@ -262,43 +262,43 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W4 — Comunicación entre servicios, resiliencia y compensación
 
-- [x] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
+- [ ] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
   - Aceptación: la llamada se resuelve por nombre lógico y la configuración no contiene destinos fijos.
   - Depende: W3-2, W3-3, W1-1
   - Spec: ISC (llamada real por nombre lógico), SE (localización exclusiva por nombre lógico)
   - Verificación: `grep -rn 'servicio-inventario' servicio-pedidos/src/main/java | grep -q FeignClient`
 
-- [x] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
+- [ ] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
   - Aceptación: una dependencia bloqueada produce fallo acotado dentro de 2 s y no reintenta errores de negocio.
   - Depende: W4-1
   - Spec: ISC (timeout explícito y acotado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*FeignTimeout*'`
 
-- [x] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
+- [ ] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
   - Aceptación: con inventario caído, la llamada falla rápido sin tocar la red y el cliente recibe 503 tipado con `correlationId`.
   - Depende: W4-2
   - Spec: ISC (circuit breaker, error tipado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*CircuitBreaker*'`
 
-- [x] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
+- [ ] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
   - Aceptación: stock suficiente confirma y descuenta exactamente lo pedido; una línea insuficiente no descuenta ningún SKU.
   - Depende: W4-3, W3-5
   - Spec: OM (reserva atómica, rechazo por stock), ISC (consistencia sin transacción distribuida)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoCreation*'`
 
-- [x] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
+- [ ] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
   - Aceptación: el pedido permanece en un estado honesto, la reserva aplicada se libera y un fallo de liberación solo deja `WARN` y métrica.
   - Depende: W4-4
   - Spec: ISC (compensación y consistencia), OM (cancelación con liberación best-effort)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*Compensation*'`
 
-- [x] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
+- [ ] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
   - Aceptación: dos llamadas con el mismo `pedidoId` dejan el stock igual y la segunda respuesta es equivalente a la primera.
   - Depende: W4-4, W3-2
   - Spec: IM (idempotencia de la reserva), ISC (reintento no duplica consumo)
   - Verificación: `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*Idempotency*'`
 
-- [x] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
+- [ ] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
   - Aceptación: el script termina en 0 y falla si aparece cualquiera de las tres violaciones.
   - Depende: W4-1, W2-8
   - Spec: OM (aislamiento del dominio), IM (propiedad exclusiva), SE (sin destinos fijos), reglas `apply` de `config.yaml`
@@ -308,37 +308,37 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W5 — Gateway como punto de entrada único
 
-- [ ] **W5-1** Configurar `gateway` con rutas explícitas `Path=/api/pedidos/** → lb://servicio-pedidos` y `Path=/api/inventario/** → lb://servicio-inventario`, sin localizador automático de descubrimiento, en el puerto 8080.
+- [x] **W5-1** Configurar `gateway` con rutas explícitas `Path=/api/pedidos/** → lb://servicio-pedidos` y `Path=/api/inventario/** → lb://servicio-inventario`, sin localizador automático de descubrimiento, en el puerto 8080.
   - Aceptación: ambas rutas aparecen declaradas en la configuración y resuelven a instancias registradas.
   - Depende: W3-6, W1-1
   - Spec: GW (punto de entrada único, rutas declaradas)
   - Verificación: `grep -nE 'lb://servicio-(pedidos|inventario)' gateway/src/main/resources/application.yml`
 
-- [ ] **W5-2** Implementar `CorrelationIdFilter` como `GlobalFilter` que reutiliza o genera `X-Correlation-Id`, muta el request descendente y lo devuelve en la respuesta.
+- [x] **W5-2** Implementar `CorrelationIdFilter` como `GlobalFilter` que reutiliza o genera `X-Correlation-Id`, muta el request descendente y lo devuelve en la respuesta.
   - Aceptación: un `X-Correlation-Id: abc-123` entrante aparece en los logs de ambos servicios y en la respuesta.
   - Depende: W5-1
   - Spec: GW (propagación del identificador de correlación)
   - Verificación: `mvn -q -pl gateway -am test -Dtest='CorrelationIdFilterTest'`
 
-- [ ] **W5-3** Añadir circuit breaker por ruta, retry solo en `GET` (máximo un intento) y timeouts `connect=2s` / `response=8s`.
+- [x] **W5-3** Añadir circuit breaker por ruta, retry solo en `GET` (máximo un intento) y timeouts `connect=2s` / `response=8s`.
   - Aceptación: sin destino sano, la ruta responde `503` tipado en tiempo acotado, por debajo de 8 s.
   - Depende: W5-2
   - Spec: GW (aislamiento de fallos en la entrada)
   - Verificación: `mvn -q -pl gateway -am test -Dtest='GatewayFallbackTest'`
 
-- [ ] **W5-4** Configurar el pool de Reactor Netty (`max-connections=200`, `max-idle-time=20s`, `acquire-timeout=5s`, `max-pending-acquire=100`).
+- [x] **W5-4** Configurar el pool de Reactor Netty (`max-connections=200`, `max-idle-time=20s`, `acquire-timeout=5s`, `max-pending-acquire=100`).
   - Aceptación: la configuración efectiva muestra los cuatro valores y una carga secuencial de 100 requests no agota el pool.
   - Depende: W5-1
   - Spec: GW (entrada única con carga sostenida), LB (distribución medible)
   - Verificación: `grep -nE 'max-connections|acquire-timeout' gateway/src/main/resources/application.yml`
 
-- [ ] **W5-5** Añadir el registry Prometheus y `lb_requests_total{service,instance}` en el gateway para que la evidencia de balanceo sea reconstruible por script.
+- [x] **W5-5** Añadir el registry Prometheus y `lb_requests_total{service,instance}` en el gateway para que la evidencia de balanceo sea reconstruible por script.
   - Aceptación: `/actuator/prometheus` expone el contador por instancia.
   - Depende: W5-1
   - Spec: LB (evidencia por solicitud), EE (evidencia generada por script)
   - Verificación: `mvn -q -pl gateway -am test -Dtest='*Metrics*'`
 
-- [ ] **W5-6** Verificar la frontera del gateway: solo `8080` publicado, rutas por nombre lógico y cero dependencias de base de datos en el módulo.
+- [x] **W5-6** Verificar la frontera del gateway: solo `8080` publicado, rutas por nombre lógico y cero dependencias de base de datos en el módulo.
   - Aceptación: el gateway no declara datasource ni driver JDBC y sus rutas no contienen hosts.
   - Depende: W5-1
   - Spec: GW (entrada única), PRC (separación de responsabilidades)
