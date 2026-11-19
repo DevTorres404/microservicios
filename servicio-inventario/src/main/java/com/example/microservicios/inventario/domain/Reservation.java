@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 /**
@@ -42,6 +43,10 @@ public class Reservation {
 
     /** Required by JPA. */
     protected Reservation() {
+    }
+
+    public Reservation(Long orderId) {
+        this(orderId, OffsetDateTime.now(ZoneOffset.UTC));
     }
 
     public Reservation(Long orderId, OffsetDateTime createdAt) {
