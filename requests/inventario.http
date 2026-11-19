@@ -1,0 +1,40 @@
+### 1. List available stock items
+GET http://localhost:8080/api/inventario
+Accept: application/json
+X-Correlation-Id: test-corr-inv-list
+
+### 2. Get single stock item by SKU
+GET http://localhost:8080/api/inventario/SKU-KEYBOARD
+Accept: application/json
+X-Correlation-Id: test-corr-inv-get
+
+### 3. Reserve stock for an order
+POST http://localhost:8080/api/inventario/reservas
+Content-Type: application/json
+Accept: application/json
+X-Correlation-Id: test-corr-inv-reserve
+
+{
+  "orderId": 1001,
+  "lines": [
+    {
+      "sku": "SKU-KEYBOARD",
+      "quantity": 2
+    }
+  ]
+}
+
+### 4. Release order reservation (compensation)
+POST http://localhost:8080/api/inventario/reservas/1001/liberacion
+Accept: application/json
+X-Correlation-Id: test-corr-inv-release
+
+### 5. Adjust stock availability (replenishment)
+PUT http://localhost:8080/api/inventario/SKU-KEYBOARD
+Content-Type: application/json
+Accept: application/json
+X-Correlation-Id: test-corr-inv-adjust
+
+{
+  "quantity": 100
+}
