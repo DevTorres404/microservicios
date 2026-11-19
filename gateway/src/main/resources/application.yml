@@ -16,7 +16,7 @@ spring:
           type: ELASTIC
           max-connections: 200
           max-idle-time: 20s
-          acquire-timeout: 5s
+          acquire-timeout: 5000
           max-pending-acquire: 100
       routes:
         - id: servicio-pedidos
@@ -73,7 +73,7 @@ eureka:
     serviceUrl:
       defaultZone: ${EUREKA_SERVER_URL:http://127.0.0.1:8761/eureka/}
     fetchRegistry: true
-    registerWithEureka: true
+    registerWithEureka: false
     registryFetchIntervalSeconds: 3
   instance:
     instance-id: ${spring.application.name}:${INSTANCE_ID:${HOSTNAME:local}}

@@ -2,8 +2,8 @@
 
 Registro de decisiones del sistema de microservicios distribuidos.
 
-> Estado de este archivo: contiene **ADR-10**, que es la decisión bloqueante de W0 (matriz de
-> versiones del build). Los ADR-01 a ADR-09 se completan en W9-3 a partir de `design.md` §3.
+> Estado de este archivo: contiene **ADR-10** y **ADR-05**, que son las decisiones bloqueantes del
+> build y del entorno PostgreSQL de replicación. Los ADR restantes se completan en W9-3 a partir de `design.md` §3.
 > No se declaran aquí decisiones que todavía no estén ratificadas con evidencia.
 
 ## ADR-10 — Build fijado en Spring Boot 3.5.16 y Spring Cloud 2025.0.3 sobre JDK 21
@@ -36,7 +36,7 @@ confirmarla. Una combinación incompatible no falla en `mvn validate`: falla en 
 | `org.springframework.cloud:spring-cloud-dependencies` (BOM importado) | `2025.0.3` | `spring-cloud-dependencies-2025.0.3.pom` SHA-256 `0c832713369dbdca8e1644576b208064a1619f03954af52a1ae5c22ec1c58079` |
 | JDK | Temurin `21.0.12.1+1` LTS | Verificado localmente con `mvn -version` (runtime `C:\Users\Damian\tools\jdk-21.0.12.1+1`) |
 | Maven | `3.9.16` | Verificado localmente con `mvn -version` |
-| PostgreSQL (imágenes) | `16` | Fijado en `.env.example`; el digest se ratifica en W7-2 |
+| PostgreSQL (imágenes) | `16` | `postgres@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54` (ratificado en W7-2) |
 
 ### Alternativas descartadas
 
@@ -67,4 +67,34 @@ confirmarla. Una combinación incompatible no falla en `mvn validate`: falla en 
 grep -A8 'ADR-10' docs/decisiones.md | grep -qE 'Spring Boot 3\.5\.[0-9]+'
 grep -A8 'ADR-10' docs/decisiones.md | grep -qE 'Spring Cloud 2025\.0\.[0-9]+'
 mvn -q -N validate
+```
+
+---
+
+## ADR-05 — Imagen PostgreSQL de streaming replication y digest inmutable
+
+**Decisión**: el cluster PostgreSQL se compone de la imagen oficial **`postgres:16`** pineada por digest inmutable (`postgres@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54`, Debian 16.14) con entrypoints dedicados (`infra/postgres/primary-entrypoint.sh` y `infra/postgres/replica-entrypoint.sh`), aprovisionamiento de replicación vía `pg_basebackup -R` con `passfile` (`.pgpass` modo 0600) y cero credenciales expuestas en `postgresql.auto.conf`.
+
+### Contexto
+
+El sistema requiere un nodo primario de escritura y dos réplicas asíncronas de sólo lectura (`pg-primary`, `pg-replica-1`, `pg-replica-2`). Se requiere garantizar reproducibilidad absoluta del entorno evitando derivas de versiones, descontinuaciones de imágenes de terceros o credenciales en texto plano persistidas en la configuración automática.
+
+### Alternativas descartadas
+
+| Alternativa | Por qué se descarta |
+| :-- | :-- |
+| `bitnami/postgresql` con variables de replicación | Distribución inestable: migración de tags a `bitnamilegacy`, tags flotantes sujetos a eliminación o cambios sin aviso. |
+| Credenciales en `primary_conninfo` en `postgresql.auto.conf` | Viola el principio de no persistir secretos en texto plano en la configuración del motor; `passfile` en `.pgpass` con permisos 0600 aísla la credencial. |
+| Slots de replicación con `max_replication_slots=0` | En primarios con slots deshabilitados (`max_replication_slots=0`), `pg_basebackup` requiere explícitamente `--no-slot` para apoyarse en `wal_keep_size=512MB`. |
+
+### Consecuencias y límites aceptados
+
+- **Positivo**: reproducible, auditable, sin dependencias de repositorios comerciales externos.
+- **Límite**: ausencia de failover automático (fuera de alcance del laboratorio; las réplicas son estrictamente de lectura).
+
+### Verificación
+
+```bash
+bash scripts/smoke-postgres-replication.sh
+docker exec pg-replica-1 psql -U replicator -d postgres -tAc 'SELECT pg_is_in_recovery();'
 ```

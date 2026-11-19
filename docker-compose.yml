@@ -1,0 +1,352 @@
+services:
+  # ============================================================================
+  # PostgreSQL Cluster (1 primary + 2 streaming asynchronous replicas)
+  # ============================================================================
+  pg-primary:
+    image: ${POSTGRES_IMAGE:-postgres:16}
+    container_name: pg-primary
+    entrypoint: ["/entrypoint.sh"]
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=ddl"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PEDIDOS_APP_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      INVENTARIO_APP_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      REPLICATOR_PASSWORD: ${REPLICATOR_PASSWORD}
+    volumes:
+      - pg_primary_data:/var/lib/postgresql/data
+      - ./infra/postgres/primary-entrypoint.sh:/entrypoint.sh:ro
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${REPLICATOR_USER:-replicator} -d postgres || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  pg-replica-1:
+    image: ${POSTGRES_IMAGE:-postgres:16}
+    container_name: pg-replica-1
+    entrypoint: ["/entrypoint.sh"]
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=ddl"
+    depends_on:
+      pg-primary:
+        condition: service_healthy
+    environment:
+      PRIMARY_HOST: pg-primary
+      PRIMARY_PORT: 5432
+      REPLICATOR_USER: ${REPLICATOR_USER:-replicator}
+      REPLICATOR_PASSWORD: ${REPLICATOR_PASSWORD}
+    volumes:
+      - pg_replica1_data:/var/lib/postgresql/data
+      - ./infra/postgres/replica-entrypoint.sh:/entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${REPLICATOR_USER:-replicator} -d postgres || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - backend
+    mem_limit: 384m
+
+  pg-replica-2:
+    image: ${POSTGRES_IMAGE:-postgres:16}
+    container_name: pg-replica-2
+    entrypoint: ["/entrypoint.sh"]
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=ddl"
+    depends_on:
+      pg-primary:
+        condition: service_healthy
+    environment:
+      PRIMARY_HOST: pg-primary
+      PRIMARY_PORT: 5432
+      REPLICATOR_USER: ${REPLICATOR_USER:-replicator}
+      REPLICATOR_PASSWORD: ${REPLICATOR_PASSWORD}
+    volumes:
+      - pg_replica2_data:/var/lib/postgresql/data
+      - ./infra/postgres/replica-entrypoint.sh:/entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${REPLICATOR_USER:-replicator} -d postgres || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks:
+      - backend
+    mem_limit: 384m
+
+  # ============================================================================
+  # Service Discovery & Gateway
+  # ============================================================================
+  eureka-server:
+    image: eureka-server:local
+    container_name: eureka-server
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    ports:
+      - "${EUREKA_PORT:-8761}:8761"
+    environment:
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8761/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 25s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  gateway:
+    image: gateway:local
+    container_name: gateway
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 25s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  # ============================================================================
+  # Business Microservices Instances
+  # ============================================================================
+  pedidos-1:
+    image: servicio-pedidos:local
+    container_name: pedidos-1
+    build:
+      context: ./servicio-pedidos
+      dockerfile: Dockerfile
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      pg-primary:
+        condition: service_healthy
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      INSTANCE_ID: ${PEDIDOS_1_INSTANCE_ID:-pedidos-1}
+      SPRING_APPLICATION_NAME: servicio-pedidos
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pg-primary:5432/pedidos_db
+      SPRING_DATASOURCE_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      SPRING_DATASOURCE_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_PRIMARY_JDBC_URL: jdbc:postgresql://pg-primary:5432/pedidos_db?ApplicationName=pedidos-1
+      DB_PRIMARY_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_PRIMARY_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_REPLICA1_JDBC_URL: jdbc:postgresql://pg-replica-1:5432/pedidos_db?ApplicationName=pedidos-1
+      DB_REPLICA1_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_REPLICA1_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_REPLICA2_JDBC_URL: jdbc:postgresql://pg-replica-2:5432/pedidos_db?ApplicationName=pedidos-1
+      DB_REPLICA2_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_REPLICA2_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8082/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 30s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  pedidos-2:
+    image: servicio-pedidos:local
+    container_name: pedidos-2
+    build:
+      context: ./servicio-pedidos
+      dockerfile: Dockerfile
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      pg-primary:
+        condition: service_healthy
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      INSTANCE_ID: ${PEDIDOS_2_INSTANCE_ID:-pedidos-2}
+      SPRING_APPLICATION_NAME: servicio-pedidos
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pg-primary:5432/pedidos_db
+      SPRING_DATASOURCE_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      SPRING_DATASOURCE_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_PRIMARY_JDBC_URL: jdbc:postgresql://pg-primary:5432/pedidos_db?ApplicationName=pedidos-2
+      DB_PRIMARY_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_PRIMARY_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_REPLICA1_JDBC_URL: jdbc:postgresql://pg-replica-1:5432/pedidos_db?ApplicationName=pedidos-2
+      DB_REPLICA1_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_REPLICA1_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      DB_REPLICA2_JDBC_URL: jdbc:postgresql://pg-replica-2:5432/pedidos_db?ApplicationName=pedidos-2
+      DB_REPLICA2_USERNAME: ${PEDIDOS_APP_USER:-pedidos_app}
+      DB_REPLICA2_PASSWORD: ${PEDIDOS_APP_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8082/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 30s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  inventario-1:
+    image: servicio-inventario:local
+    container_name: inventario-1
+    build:
+      context: ./servicio-inventario
+      dockerfile: Dockerfile
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      pg-primary:
+        condition: service_healthy
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      INSTANCE_ID: ${INVENTARIO_1_INSTANCE_ID:-inventario-1}
+      SPRING_APPLICATION_NAME: servicio-inventario
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pg-primary:5432/inventario_db
+      SPRING_DATASOURCE_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      SPRING_DATASOURCE_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_PRIMARY_JDBC_URL: jdbc:postgresql://pg-primary:5432/inventario_db?ApplicationName=inventario-1
+      DB_PRIMARY_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_PRIMARY_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_REPLICA1_JDBC_URL: jdbc:postgresql://pg-replica-1:5432/inventario_db?ApplicationName=inventario-1
+      DB_REPLICA1_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_REPLICA1_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_REPLICA2_JDBC_URL: jdbc:postgresql://pg-replica-2:5432/inventario_db?ApplicationName=inventario-1
+      DB_REPLICA2_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_REPLICA2_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8081/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 30s
+    networks:
+      - backend
+    mem_limit: 512m
+
+  inventario-2:
+    image: servicio-inventario:local
+    container_name: inventario-2
+    build:
+      context: ./servicio-inventario
+      dockerfile: Dockerfile
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      pg-primary:
+        condition: service_healthy
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      INSTANCE_ID: ${INVENTARIO_2_INSTANCE_ID:-inventario-2}
+      SPRING_APPLICATION_NAME: servicio-inventario
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://pg-primary:5432/inventario_db
+      SPRING_DATASOURCE_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      SPRING_DATASOURCE_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_PRIMARY_JDBC_URL: jdbc:postgresql://pg-primary:5432/inventario_db?ApplicationName=inventario-2
+      DB_PRIMARY_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_PRIMARY_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_REPLICA1_JDBC_URL: jdbc:postgresql://pg-replica-1:5432/inventario_db?ApplicationName=inventario-2
+      DB_REPLICA1_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_REPLICA1_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      DB_REPLICA2_JDBC_URL: jdbc:postgresql://pg-replica-2:5432/inventario_db?ApplicationName=inventario-2
+      DB_REPLICA2_USERNAME: ${INVENTARIO_APP_USER:-inventario_app}
+      DB_REPLICA2_PASSWORD: ${INVENTARIO_APP_PASSWORD}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--XX:MaxRAMPercentage=70}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8081/actuator/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 30s
+    networks:
+      - backend
+    mem_limit: 512m
+
+networks:
+  backend:
+    name: microservicios_backend
+    driver: bridge
+
+volumes:
+  pg_primary_data:
+  pg_replica1_data:
+  pg_replica2_data:

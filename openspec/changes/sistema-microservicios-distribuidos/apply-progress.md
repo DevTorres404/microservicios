@@ -502,6 +502,46 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los componen
 2. **Ciclo de vida del sondeo periódico en Integration Tests (`RoutingWiringIT`)**: Los tests de integración con un único contenedor PostgreSQL sin replicación física streaming activada detienen el planificador de sondeo (`stopPeriodicProbing()`) y fijan el estado saludable de las réplicas en `@BeforeEach` para comprobar el round-robin de lecturas sin interferencia de las sondas hacia tablas de replicación ausentes.
 3. **Mapeo explícito de transaccionalidad en endpoints de lectura**: Se anotaron `@Transactional(readOnly = true)` en los métodos `listStock()` y `getStock(sku)` de `InventarioController` para que el aspecto `ReadWriteRoutingAspect` intercepte la llamada a nivel de controlador antes de que Spring Data resuelva la conexión.
 
-## 35. Pendientes y próximos pasos (W7)
+## 35. Entorno Compose de 9 contenedores (W7)
 
-- **W7 — Entorno Compose de 9 contenedores**: Creación del `docker-compose.yml` con topología completa de 3 nodos PostgreSQL (`primary`, `replica1`, `replica2`), replicación física por streaming, Eureka (`eureka-server`), Gateway (`gateway`), 2 instancias de `servicio-pedidos` y 2 instancias de `servicio-inventario`.
+| Tarea | Estado | Evidencia |
+| :-- | :-- | :-- |
+| W7-1 Tres nodos PostgreSQL con streaming replication | ✅ | `pg-primary`, `pg-replica-1`, `pg-replica-2` en red `backend`, volúmenes nombrados, `wal_level=replica`, `wal_keep_size=512MB`, `max_replication_slots=0` y healthchecks `pg_isready` |
+| W7-2 Prueba de humo de replicación y ADR-05 | ✅ | `bash scripts/smoke-postgres-replication.sh` → 6/6 fases superadas (`standby.signal`, `primary_conninfo`, sin claves en `auto.conf`, `pg_is_in_recovery() = t`, `pg_stat_wal_receiver.status = streaming`, propagación de datos). Digest fijado en ADR-05 y `.env.example`: `postgres@sha256:fe03a7605299a34ddf5e4f285dff78c3d7190a576b3c6b46f2fcff69f4bffd54` |
+| W7-3 Entrypoints de replicación y hot standby | ✅ | `primary-entrypoint.sh` y `replica-entrypoint.sh` con `.pgpass` 0600, cloning con `pg_basebackup --no-slot`, `docker exec pg-replica-1 psql -U replicator -tAc 'select pg_is_in_recovery()'` → `t` |
+| W7-4 Eureka y Gateway con puertos acotados | ✅ | Solo 2 puertos publicados al host (`8761` y `8080`): `docker compose config --format json | grep -c published` → 2; ambos contenedores `healthy` |
+| W7-5 Cuatro instancias de servicios de negocio en Eureka | ✅ | `pedidos-1`, `pedidos-2`, `inventario-1`, `inventario-2` con `INSTANCE_ID` propio, healthchecks de Actuator y registro con lease 5s/15s en Eureka: `curl http://localhost:8761/eureka/apps` → 4 instancias `UP` |
+| W7-6 Límites de memoria por contenedor | ✅ | 9 límites declarados: `docker compose config | grep -cE 'mem_limit|limits:'` → 9, total acotado a recursos de Docker Desktop/WSL2 con JVM `-XX:MaxRAMPercentage=70` |
+| W7-7 Override de evidencia con `log_statement=all` | ✅ | `docker compose -f docker-compose.yml -f docker-compose.evidence.yml config | grep -c 'log_statement=all'` → 3 |
+| W7-8 Entorno completo reproducible desde cero | ✅ | `docker compose down -v && docker compose up -d` deja 9/9 contenedores `healthy` y 4 instancias `UP` registradas |
+
+## 36. Comandos ejecutados y resultado observado (W7)
+
+| Comando | Resultado |
+| :-- | :-- |
+| `bash scripts/smoke-postgres-replication.sh` | exit 0 — 6/6 fases pasadas (health, standby.signal, primary_conninfo, sin credenciales en auto.conf, recovery, streaming WAL, propagación) |
+| `docker exec pg-replica-1 psql -U replicator -tAc 'select pg_is_in_recovery()'` | exit 0 — `t` |
+| `docker compose config --format json | grep -c published` | exit 0 — `2` |
+| `curl -sf -H 'Accept: application/json' http://localhost:8761/eureka/apps | grep -o 'status.:.UP' | wc -l` | exit 0 — `4` |
+| `docker compose config | grep -cE 'mem_limit|limits:'` | exit 0 — `9` |
+| `docker compose -f docker-compose.yml -f docker-compose.evidence.yml config | grep -c 'log_statement=all'` | exit 0 — `3` |
+| `docker compose ps --format '{{.Health}}' | grep -c healthy` | exit 0 — `9` (los 9 contenedores en estado `healthy`) |
+| `bash scripts/verify-w7.sh` | exit 0 — Validación integral de W7-1 a W7-8 pasada |
+| `bash scripts/check-boundaries.sh` | exit 0 — 3/3 verificaciones arquitecturales pasadas (0 violaciones) |
+
+## 37. Desviaciones y hallazgos (W7)
+
+1. **Replicación en PostgreSQL 16 con `max_replication_slots=0`**:
+   `pg_basebackup` con `-Xs` intenta por defecto crear un replication slot temporal. Dado que el nodo primario tiene `max_replication_slots=0`, `pg_basebackup` falla con error de slots si no se provee `--no-slot`. Se incluyó explícitamente `--no-slot` en `replica-entrypoint.sh` para delegar la retención de WAL a `wal_keep_size=512MB`.
+2. **Permisos de lectura en vistas de estadísticas del motor (`pg_stat_wal_receiver` y `pg_stat_activity`)**:
+   PostgreSQL restringe la visibilidad de filas en `pg_stat_wal_receiver` a superusuarios o miembros del rol predefinido `pg_read_all_stats`. Para que las sondas de salud de `ReplicaHealthRegistry` y los scripts de verificación de réplicas puedan leer el estado de streaming sin requerir permisos de superusuario, se añadió `GRANT pg_read_all_stats TO pedidos_app, inventario_app, replicator;` en el script inicial de la base de datos `01-databases.sql`.
+3. **Conversión de rutas POSIX en entornos MSYS2/Git Bash en Windows**:
+   Git Bash convierte automáticamente argumentos con barras inclinadas iniciales (`/var/lib/...`) a rutas Windows absolutas (`C:\Program Files\Git\...`) al invocar ejecutables nativos como `docker.exe`. Se fijó `export MSYS_NO_PATHCONV=1` al inicio de los scripts de arnés bash para evitar que `docker exec` busque rutas locales inexistentes dentro del contenedor Linux.
+4. **Propiedad de timeout en Spring Cloud Gateway**:
+   En Spring Cloud Gateway 2025.0.x (sobre Boot 3.5.x), la propiedad `spring.cloud.gateway.httpclient.pool.acquire-timeout` se vincula estrictamente a un tipo `java.lang.Long` en milisegundos, por lo que el uso de strings con sufijo de unidad (`5s`) provocaba un `NumberFormatException` durante el arranque. Se corrigió a `5000`.
+5. **Configuración de Eureka Client en Gateway**:
+   Para cumplir la especificación de que exactamente 4 instancias de servicios de negocio aparezcan registradas como `UP` en `/eureka/apps`, el Gateway mantiene `fetchRegistry: true` para el enrutamiento lógico pero desactiva su propio registro con `registerWithEureka: false`.
+
+## 38. Pendientes y próximos pasos (W8)
+
+- **W8 — Evidencia experimental P01–P08 y P06b**: Generación de los scripts versionados de recolección (`scripts/collect-evidence.sh`, `evidence-p01.sh`, etc.) y redacción de los 9 informes de contraste empírico en `docs/informes/`.

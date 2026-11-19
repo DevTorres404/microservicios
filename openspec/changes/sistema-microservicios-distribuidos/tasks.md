@@ -474,49 +474,49 @@ Ciclo RED→GREEN explícito: las tareas de test preceden a su implementación. 
 
 ## W7 — Entorno Compose de 9 contenedores
 
-- [ ] **W7-1** Crear `docker-compose.yml` con los tres nodos PostgreSQL (`postgres:16`), red `backend`, volumen nombrado por nodo, parámetros `wal_level=replica`, `max_wal_senders=10`, `wal_keep_size=512MB`, `max_replication_slots=0` y healthchecks `pg_isready`.
+- [x] **W7-1** Crear `docker-compose.yml` con los tres nodos PostgreSQL (`postgres:16`), red `backend`, volumen nombrado por nodo, parámetros `wal_level=replica`, `max_wal_senders=10`, `wal_keep_size=512MB`, `max_replication_slots=0` y healthchecks `pg_isready`.
   - Aceptación: los tres contenedores arrancan y quedan `healthy`; las réplicas dependen del primario con `service_healthy`.
   - Depende: W2-8
   - Spec: PRC (primario y dos réplicas asíncronas), DE (red y dependencias de arranque)
   - Verificación: `docker compose up -d pg-primary pg-replica-1 pg-replica-2 && docker compose ps --format '{{.Name}} {{.Health}}'`
 
-- [ ] **W7-2** Ejecutar la prueba de humo de la imagen PostgreSQL (`postgres:16` oficial + `pg_basebackup -R` con `passfile`, ADR-05) **antes** de cablear el resto del Compose, y fijar el digest en `.env.example` y ADR-05.
+- [x] **W7-2** Ejecutar la prueba de humo de la imagen PostgreSQL (`postgres:16` oficial + `pg_basebackup -R` con `passfile`, ADR-05) **antes** de cablear el resto del Compose, y fijar el digest en `.env.example` y ADR-05.
   - Aceptación: el script confirma `standby.signal`, `primary_conninfo` y `pg_stat_wal_receiver.status = streaming` sin credenciales escritas en `postgresql.auto.conf` ni en la imagen.
   - Depende: W7-1
   - Spec: PRC (replicación por streaming), ADR-05
   - Verificación: `bash scripts/smoke-postgres-replication.sh`
 
-- [ ] **W7-3** Completar `infra/postgres/primary-entrypoint.sh` y `infra/postgres/replica-entrypoint.sh` con la entrada `host replication replicator 0.0.0.0/0 scram-sha-256` y el re-clone documentado.
+- [x] **W7-3** Completar `infra/postgres/primary-entrypoint.sh` y `infra/postgres/replica-entrypoint.sh` con la entrada `host replication replicator 0.0.0.0/0 scram-sha-256` y el re-clone documentado.
   - Aceptación: un contenedor de réplica con `PGDATA` vacío se clona y arranca en `hot_standby`; con `PGDATA` poblado solo arranca.
   - Depende: W7-2
   - Spec: PRC (réplicas estrictamente de lectura), ADR-05
   - Verificación: `docker exec pg-replica-1 psql -U replicator -tAc 'select pg_is_in_recovery()'`
 
-- [ ] **W7-4** Añadir `eureka-server` y `gateway` al Compose con healthchecks de Actuator y `depends_on: service_healthy`; publicar solo `8761` y `8080`.
+- [x] **W7-4** Añadir `eureka-server` y `gateway` al Compose con healthchecks de Actuator y `depends_on: service_healthy`; publicar solo `8761` y `8080`.
   - Aceptación: ambos quedan `healthy` y ningún otro contenedor publica puerto al host.
   - Depende: W1-2, W5-1
   - Spec: DE (exposición mínima de puertos), GW (entrada única)
   - Verificación: `test "$(docker compose config --format json | grep -c published)" -eq 2`
 
-- [ ] **W7-5** Añadir las dos instancias de cada servicio de negocio con `INSTANCE_ID` (`pedidos-1`, `pedidos-2`, `inventario-1`, `inventario-2`), `depends_on: service_healthy` de Eureka y PostgreSQL, y healthcheck de Actuator.
+- [x] **W7-5** Añadir las dos instancias de cada servicio de negocio con `INSTANCE_ID` (`pedidos-1`, `pedidos-2`, `inventario-1`, `inventario-2`), `depends_on: service_healthy` de Eureka y PostgreSQL, y healthcheck de Actuator.
   - Aceptación: las cuatro instancias arrancan, se registran con identificadores distintos y responden tráfico.
   - Depende: W7-4, W6-13, W6-14, W4-1
   - Spec: LB (dos instancias simultáneas), SE (identificador único), DE (arranque ordenado)
   - Verificación: `test "$(curl -sf -H 'Accept: application/json' http://localhost:8761/eureka/apps | grep -c 'status.:.UP')" -eq 4`
 
-- [ ] **W7-6** Aplicar límites de memoria por contenedor y JVM acotada (`-XX:MaxRAMPercentage`) y documentar los requisitos de Docker Desktop/WSL2.
+- [x] **W7-6** Aplicar límites de memoria por contenedor y JVM acotada (`-XX:MaxRAMPercentage`) y documentar los requisitos de Docker Desktop/WSL2.
   - Aceptación: ningún contenedor supera su límite declarado y el total cabe en el entorno documentado.
   - Depende: W7-5
   - Spec: DE (entorno reproducible), riesgo «recursos de Docker»
   - Verificación: `test "$(docker compose config | grep -cE 'mem_limit|limits:')" -ge 9`
 
-- [ ] **W7-7** Crear `docker-compose.evidence.yml` como override que sube `log_statement=all` en los tres nodos y fija `application_name` por instancia.
+- [x] **W7-7** Crear `docker-compose.evidence.yml` como override que sube `log_statement=all` en los tres nodos y fija `application_name` por instancia.
   - Aceptación: con el override activo, el log del nodo registra la sentencia identificable y el perfil usado queda declarado en el informe.
   - Depende: W7-5
   - Spec: PRC (estado de replicación observable), EE (contraste no circular)
   - Verificación: `docker compose -f docker-compose.yml -f docker-compose.evidence.yml config | grep -c 'log_statement=all'`
 
-- [ ] **W7-8** Verificar el entorno completo: nueve contenedores `healthy` y cuatro instancias `UP` en Eureka desde un entorno destruido.
+- [x] **W7-8** Verificar el entorno completo: nueve contenedores `healthy` y cuatro instancias `UP` en Eureka desde un entorno destruido.
   - Aceptación: `docker compose down -v` seguido de `docker compose up -d` deja 9 contenedores healthy y 4 instancias registradas.
   - Depende: W7-1, W7-2, W7-3, W7-4, W7-5, W7-6, W7-7
   - Spec: DE (entorno reproducible desde cero), PRC, SE

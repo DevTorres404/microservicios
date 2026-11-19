@@ -85,3 +85,25 @@ routing:
       jdbc-url: ${DB_REPLICA2_JDBC_URL:${spring.datasource.url}}
       username: ${DB_REPLICA2_USERNAME:${spring.datasource.username}}
       password: ${DB_REPLICA2_PASSWORD:${spring.datasource.password}}
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://127.0.0.1:8761/eureka/}
+    fetchRegistry: true
+    registerWithEureka: true
+    registryFetchIntervalSeconds: 3
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${INSTANCE_ID:${HOSTNAME:local}}
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

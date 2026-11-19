@@ -30,6 +30,7 @@ CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD :'replicator_password';
 
 CREATE DATABASE pedidos_db OWNER pedidos_app;
 CREATE DATABASE inventario_db OWNER inventario_app;
+CREATE DATABASE replicator OWNER replicator;
 
 -- Closing the default CONNECT privilege for PUBLIC is what keeps each service out of the other's
 -- database: without an explicit GRANT, only the owner can connect.
@@ -38,3 +39,6 @@ REVOKE ALL ON DATABASE inventario_db FROM PUBLIC;
 
 GRANT CONNECT, TEMPORARY ON DATABASE pedidos_db TO pedidos_app;
 GRANT CONNECT, TEMPORARY ON DATABASE inventario_db TO inventario_app;
+
+-- Grant access to system statistics (pg_stat_wal_receiver, pg_stat_activity) for health probing and replication monitoring
+GRANT pg_read_all_stats TO pedidos_app, inventario_app, replicator;

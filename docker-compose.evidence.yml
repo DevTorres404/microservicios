@@ -1,0 +1,50 @@
+# Docker Compose override for experimental evidence collection (P01..P08, P06b).
+# Activates log_statement=all on the three PostgreSQL nodes for non-circular SQL audit.
+services:
+  pg-primary:
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=all"
+
+  pg-replica-1:
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=all"
+
+  pg-replica-2:
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=10"
+      - "-c"
+      - "wal_keep_size=512MB"
+      - "-c"
+      - "max_replication_slots=0"
+      - "-c"
+      - "hot_standby=on"
+      - "-c"
+      - "log_statement=all"
