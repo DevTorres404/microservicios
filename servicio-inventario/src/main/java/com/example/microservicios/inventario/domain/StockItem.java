@@ -54,6 +54,14 @@ public class StockItem {
         return available;
     }
 
+    public void updateAvailable(int newAvailable) {
+        if (newAvailable < 0) {
+            throw new IllegalArgumentException("Available stock cannot be negative: " + newAvailable);
+        }
+        this.available = newAvailable;
+        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
     public BigDecimal getUnitPrice() {
         return unitPrice;
     }
