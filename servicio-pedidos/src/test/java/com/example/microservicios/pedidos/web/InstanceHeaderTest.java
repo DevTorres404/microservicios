@@ -1,6 +1,7 @@
 package com.example.microservicios.pedidos.web;
 
 import com.example.microservicios.pedidos.repository.OrderRepository;
+import com.example.microservicios.pedidos.service.OrderService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ class InstanceHeaderTest {
 
     @MockBean
     private OrderRepository orderRepository;
+
+    @MockBean
+    private OrderService orderService;
 
     @Test
     @DisplayName("Echoes incoming X-Correlation-Id and stamps X-Service-Instance")
