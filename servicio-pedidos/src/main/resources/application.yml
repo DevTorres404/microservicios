@@ -39,3 +39,32 @@ spring:
   # bound to primaryDataSource (ADR-06). See FlywayConfig.
   flyway:
     enabled: false
+
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connectTimeout: 500
+            readTimeout: 1500
+          servicio-inventario:
+            connectTimeout: 500
+            readTimeout: 1500
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      servicio-inventario:
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        slowCallDurationThreshold: 1500ms
+        slowCallRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        ignoreExceptions:
+          - com.example.microservicios.pedidos.exception.InsufficientStockException
+          - com.example.microservicios.pedidos.exception.InvalidOrderException

@@ -12,6 +12,14 @@ public abstract class DomainException extends RuntimeException {
         super(message);
     }
 
+    protected DomainException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     /** Stable, language-neutral identifier of the failure kind. */
     public abstract String code();
+
+    public String getCode() {
+        return code();
+    }
 }

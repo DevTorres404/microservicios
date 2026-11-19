@@ -3,6 +3,7 @@ package com.example.microservicios.pedidos.web;
 import com.example.microservicios.pedidos.exception.DomainException;
 import com.example.microservicios.pedidos.exception.IllegalStateTransitionException;
 import com.example.microservicios.pedidos.exception.InsufficientStockException;
+import com.example.microservicios.pedidos.exception.InventarioUnavailableException;
 import com.example.microservicios.pedidos.exception.InvalidOrderException;
 import com.example.microservicios.pedidos.exception.OrderNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,13 @@ public class PedidosExceptionHandler {
                 "INSUFFICIENT_STOCK", request);
         pd.setProperty("missingSkus", ex.missingSkus());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(pd);
+    }
+
+    @ExceptionHandler(InventarioUnavailableException.class)
+    public ResponseEntity<ProblemDetail> handleInventarioUnavailable(InventarioUnavailableException ex, HttpServletRequest request) {
+        ProblemDetail pd = createProblemDetail(HttpStatus.SERVICE_UNAVAILABLE, "Inventory Unavailable", ex.getMessage(),
+                ex.code(), request);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(pd);
     }
 
     @ExceptionHandler(InvalidOrderException.class)
