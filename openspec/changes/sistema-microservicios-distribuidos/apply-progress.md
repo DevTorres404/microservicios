@@ -212,3 +212,79 @@ dominio, 6+6 de migración ya contados arriba), todos verdes. Ningún uso de H2.
 - **Los repositorios no filtran por nodo**: el enrutamiento a réplicas es W6 y está deliberadamente
   ausente.
 
+---
+
+# W3 — API REST, validación, errores y contratos
+
+Slice aplicado: **W3** (controladores REST, validación Bean Validation, RFC 9457 `@RestControllerAdvice` ProblemDetail, máquina de estados de pedidos, filtros de cabeceras de instancia y correlación, documentación OpenAPI y colección HTTP). Ejecutado el **2026-11-18** sobre `feature/sistema-microservicios-distribuidos`.
+
+Modo de implementación: **Strict TDD** (`strict_tdd: true`). Cada nuevo endpoint, controlador, filtro y transición de estado cuenta con un test RED ejecutado y observado antes de la implementación, seguido de la implementación mínima para dejarlo en GREEN.
+
+## 13. Tareas completadas
+
+| Tarea | Estado | Evidencia observada |
+| :-- | :-- | :-- |
+| W3-1 Endpoints de lectura de inventario (`GET /api/inventario`, `GET /api/inventario/{sku}`) | ✅ | `InventarioControllerTest` 3/3 verde; listado ordenado por SKU y 404 tipado RFC 9457 para SKU inexistente |
+| W3-2 Endpoints de escritura de inventario (`POST /api/inventario/reservas`, `POST .../liberacion`, `PUT /api/inventario/{sku}`) | ✅ | `InventarioReservaControllerTest` 6/6 verde; reserva atómica, liberación idempotente y ajuste que rechaza stock negativo con 400 |
+| W3-3 Endpoints de pedidos (`POST /api/pedidos`, `GET /api/pedidos/{id}`, `GET /api/pedidos`, `POST /api/pedidos/{id}/cancelar`) | ✅ | `PedidoControllerTest` 9/9 verde; creación válida en PENDIENTE, listado con filtro por estado, cancelación y 404 tipado |
+| W3-4 Tests RED de máquina de estados y cálculo de total | ✅ | `PedidoStateMachineTest` 10 casos; compilación falló antes de implementar (métodos y excepción inexistentes) |
+| W3-5 Implementación GREEN de máquina de estados y total | ✅ | `PedidoStateMachineTest` 10/10 verde; transiciones permitidas, 5 transiciones prohibidas rechazadas con 409 y total solo con precios de inventario |
+| W3-6 Validación de entrada y `@RestControllerAdvice` ProblemDetail (RFC 9457) | ✅ | `InventarioErrorHandlingTest` 4/4 verde y `PedidosErrorHandlingTest` 4/4 verde; `400/404/409` tipados con `type`, `title`, `code`, `correlationId`, `timestamp` y `missingSkus` |
+| W3-7 Filtro `X-Service-Instance` y propagación de `X-Correlation-Id` | ✅ | `InstanceHeaderTest` 2/2 verde en ambos servicios (4/4 total); eco de correlación existente y generación de UUID cuando está ausente |
+| W3-8 OpenAPI (springdoc 2.8.5) y solicitudes HTTP en `requests/` | ✅ | `springdoc-openapi-starter-webmvc-ui` configurado en ambos servicios; `requests/inventario.http` (5) y `requests/pedidos.http` (4) = 9 operaciones contra `http://localhost:8080` |
+
+## 14. Comandos ejecutados y resultado observado
+
+| Comando | Resultado |
+| :-- | :-- |
+| `mvn -q -pl servicio-inventario -am test -Dtest='InventarioControllerTest'` (RED) | exit 1 — `cannot find symbol: class InventarioController` |
+| `mvn -q -pl servicio-inventario -am test -Dtest='*InventarioController*'` (GREEN) | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-inventario -am test -Dtest='InventarioReservaControllerTest'` (RED) | exit 1 — 6 fallos (405 Method Not Allowed / 404) por endpoints no mapeados |
+| `mvn -q -pl servicio-inventario -am test -Dtest='*Reserva*'` (GREEN) | exit 0 — `Tests run: 6, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoStateMachineTest'` (RED) | exit 1 — `cannot find symbol: method confirm(), reject(), cancel(), IllegalStateTransitionException` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoStateMachineTest'` (GREEN) | exit 0 — `Tests run: 10, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoControllerTest'` (RED) | exit 1 — `cannot find symbol: class PedidoController` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoController*'` (GREEN) | exit 0 — `Tests run: 9, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*ErrorHandling*'` | exit 0 — `PedidosErrorHandlingTest 4/4`, `InventarioErrorHandlingTest 4/4` (8 tests) |
+| `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*InstanceHeader*'` (RED) | exit 1 — `cannot find symbol: class InstanceHeaderFilter` |
+| `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*InstanceHeader*'` (GREEN) | exit 0 — 4 tests verdes en total (2 por servicio) |
+| `grep -c '^### ' requests/*.http` | exit 0 — `requests/inventario.http: 5`, `requests/pedidos.http: 4` (total 9 operaciones) |
+| `mvn -q verify` | exit 0 — Suite completa en verde en todos los módulos del reactor |
+
+## 15. TDD Cycle Evidence (Strict TDD)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| W3-1 | `servicio-inventario/.../InventarioControllerTest.java` | Web (`@WebMvcTest`) | N/A (nuevo) | ✅ Escrito antes del controlador; compilación falla por símbolo inexistente | ✅ 3/3 verdes | ✅ 3 casos: listado completo, consulta por SKU existente, 404 tipado por SKU ausente | ✅ DTO `StockResponse` extraído |
+| W3-2 | `servicio-inventario/.../InventarioReservaControllerTest.java` | Web (`@WebMvcTest`) | N/A (nuevo) | ✅ 6 tests fallaron con 405/404 antes de mapear rutas | ✅ 6/6 verdes | ✅ 6 casos: reserva exitosa, stock insuficiente (409), conflicto (409), liberación (200), ajuste (200), ajuste negativo (400) | ✅ `StockItem.updateAvailable` para preservar invariantes de dominio |
+| W3-3 | `servicio-pedidos/.../PedidoControllerTest.java` | Web (`@WebMvcTest`) | N/A (nuevo) | ✅ Compilación falla por símbolo `PedidoController` | ✅ 9/9 verdes | ✅ 9 casos: creación PENDIENTE, validación líneas vacías, validación cantidad no positiva, consulta por ID, 404 tipado, listado total, filtro por estado, cancelación válida, 409 cancelación repetida | ✅ DTOs `CreateOrderRequest`, `OrderResponse` extraídos |
+| W3-4/W3-5 | `servicio-pedidos/.../PedidoStateMachineTest.java` | Unit (dominio puro) | `OrderDomainTest` verde | ✅ Compilación falla: faltan `confirm()`, `reject()`, `cancel()`, `IllegalStateTransitionException` | ✅ 10/10 verdes | ✅ 10 casos: transiciones permitidas (PENDIENTE→CONFIRMADO, PENDIENTE→RECHAZADO, CONFIRMADO→CANCELADO, PENDIENTE→CANCELADO), transiciones prohibidas (CANCELADO→CONFIRMADO, CANCELADO→CANCELADO, RECHAZADO→CONFIRMADO, RECHAZADO→CANCELADO, CONFIRMADO→RECHAZADO), total con precios de inventario | ✅ Inmutabilidad de estado ante excepciones verificada |
+| W3-6 | `*ErrorHandlingTest.java` en ambos servicios | Web (`@WebMvcTest`) | N/A (nuevo) | ✅ Verificación de formato RFC 9457 y campos requeridos | ✅ 4/4 + 4/4 verdes | ✅ 8 casos: validación de bean (400), no encontrado (404), stock insuficiente (409 con missingSkus), transición prohibida (409), conflicto de reserva (409) | ✅ Handlers unificados bajo `ProblemDetail.forStatusAndDetail` |
+| W3-7 | `*InstanceHeaderTest.java` en ambos servicios | Web (`@WebMvcTest`) | N/A (nuevo) | ✅ Compilación falla por ausencia de `InstanceHeaderFilter` | ✅ 2/2 + 2/2 verdes | ✅ 4 casos: eco de correlationId provisto, generación de UUID ante ausencia, estampado de X-Service-Instance | ✅ Limpieza de MDC en bloque `finally` |
+| W3-8 | Colección `requests/*.http` | Contratos HTTP | N/A (nuevo) | ➖ Solicitudes de ejemplo | ✅ `requests/inventario.http` (5) + `requests/pedidos.http` (4) = 9 operaciones verificadas con grep | ✅ Nueve operaciones documentadas contra gateway `:8080` | ➖ Sin refactor necesario |
+
+**Test summary**: 36 nuevos tests añadidos en W3 (Unit 10, WebMvc 26), 100% pasando. Cero fallos, cero regresiones.
+
+## 16. Work Unit Evidence
+
+| Unidad | Comando focalizado y resultado | Arnés de ejecución | Frontera de rollback |
+| :-- | :-- | :-- | :-- |
+| Lectura de inventario (W3-1) | `mvn -q -pl servicio-inventario -am test -Dtest='*InventarioController*'` → 3/3 | `MockMvc` con repositorio simulado | `servicio-inventario/src/main/java/.../web/InventarioController.java`, `StockResponse.java`, `SkuNotFoundException.java` |
+| Escritura de inventario (W3-2) | `mvn -q -pl servicio-inventario -am test -Dtest='*Reserva*'` → 6/6 | `MockMvc` con servicio de reserva simulado | `InventarioController.java` (métodos POST/PUT), `StockAdjustmentRequest.java`, `ReservationResponse.java` |
+| Máquina de estados pedidos (W3-4, W3-5) | `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoStateMachineTest'` → 10/10 | JUnit 5 puro sobre el agregado `Order` | `Order.java` (`confirm`, `reject`, `cancel`), `IllegalStateTransitionException.java` |
+| Endpoints de pedidos (W3-3) | `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoController*'` → 9/9 | `MockMvc` con repositorio simulado | `PedidoController.java`, `CreateOrderRequest.java`, `OrderResponse.java`, `OrderNotFoundException.java` |
+| ProblemDetail RFC 9457 (W3-6) | `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*ErrorHandling*'` → 8/8 | `MockMvc` validando MediaType `application/problem+json` y propiedades tipadas | `InventarioExceptionHandler.java`, `PedidosExceptionHandler.java` |
+| Filtro de cabeceras (W3-7) | `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*InstanceHeader*'` → 4/4 | `MockMvc` con filtro inyectado | `InstanceHeaderFilter.java` en ambos servicios |
+| OpenAPI y requests HTTP (W3-8) | `grep -c '^### ' requests/*.http` → 9 operaciones | Archivos HTTP ejecutables contra `:8080` | `OpenApiConfig.java` en ambos servicios, `requests/inventario.http`, `requests/pedidos.http` |
+
+## 17. Desviaciones y hallazgos
+
+1. **Gestión de dependencias OpenAPI**: Se añadió `springdoc.version` (2.8.5) y `springdoc-openapi-starter-webmvc-ui` a `dependencyManagement` del POM padre para respetar la regla arquitectural de que ningún módulo hijo defina versiones de dependencias.
+2. **Filtro de cabecera con precedencia máxima**: `InstanceHeaderFilter` se anotó con `@Order(Ordered.HIGHEST_PRECEDENCE)` para asegurar que tanto `X-Correlation-Id` como `X-Service-Instance` se estampen incluso en respuestas de error emitidas por `@RestControllerAdvice`.
+3. **Mapeo de filtros en listado de pedidos**: El controlador `PedidoController` soporta tanto el parámetro `status` como el parámetro `estado` para mantener coherencia entre las especificaciones en inglés y el código existente de repositorios.
+
+## 18. Pendientes y riesgos (W3)
+
+- **W4 conectará Feign entre pedidos e inventario**: La creación de pedidos en W3 persiste en estado `PENDIENTE` sin llamar a inventario; la llamada remota, el circuit breaker y la confirmación/rechazo automático se implementan en W4.
+- **`@CriticalRead` se conectará en W6**: Los métodos están preparados y anotados con transacciones de sólo lectura o de escritura; el aspecto de enrutamiento a primario/réplica se añade en W6.
+

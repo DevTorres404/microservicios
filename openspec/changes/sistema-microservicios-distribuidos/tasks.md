@@ -210,49 +210,49 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W3 — API REST, validación, errores y contratos
 
-- [ ] **W3-1** Implementar los endpoints de lectura de inventario: `GET /api/inventario` y `GET /api/inventario/{sku}` con cantidad y precio vigentes.
+- [x] **W3-1** Implementar los endpoints de lectura de inventario: `GET /api/inventario` y `GET /api/inventario/{sku}` con cantidad y precio vigentes.
   - Aceptación: ambas rutas devuelven el contrato documentado y 404 tipado para SKU inexistente.
   - Depende: W2-5
   - Spec: IM (stock por SKU con precio vigente)
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='*InventarioController*'`
 
-- [ ] **W3-2** Implementar los endpoints de escritura de inventario: `POST /api/inventario/reservas`, `POST /api/inventario/reservas/{pedidoId}/liberacion` y `PUT /api/inventario/{sku}`.
+- [x] **W3-2** Implementar los endpoints de escritura de inventario: `POST /api/inventario/reservas`, `POST /api/inventario/reservas/{pedidoId}/liberacion` y `PUT /api/inventario/{sku}`.
   - Aceptación: reserva atómica por pedido, liberación idempotente y ajuste que rechaza stock negativo.
   - Depende: W3-1
   - Spec: IM (reserva atómica, idempotencia de reserva y liberación, ajuste por el primario)
   - Verificación: `mvn -q -pl servicio-inventario -am test -Dtest='*Reserva*'`
 
-- [ ] **W3-3** Implementar los endpoints de pedidos: `POST /api/pedidos`, `GET /api/pedidos/{id}`, `GET /api/pedidos` y `POST /api/pedidos/{id}/cancelar`.
+- [x] **W3-3** Implementar los endpoints de pedidos: `POST /api/pedidos`, `GET /api/pedidos/{id}`, `GET /api/pedidos` y `POST /api/pedidos/{id}/cancelar`.
   - Aceptación: cada ruta responde su contrato y `GET /api/pedidos/{id}` queda marcado como lectura crítica.
   - Depende: W2-6
   - Spec: OM (creación válida, estados, selector de nodo coherente)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoController*'`
 
-- [ ] **W3-4** Escribir (RED) los tests de la máquina de estados del pedido y del cálculo de total: `PENDIENTE→CONFIRMADO|RECHAZADO`, `CONFIRMADO→CANCELADO`, transiciones prohibidas, total con precios de inventario.
+- [x] **W3-4** Escribir (RED) los tests de la máquina de estados del pedido y del cálculo de total: `PENDIENTE→CONFIRMADO|RECHAZADO`, `CONFIRMADO→CANCELADO`, transiciones prohibidas, total con precios de inventario.
   - Aceptación: los tests fallan antes de la implementación y codifican las cinco transiciones de la tabla del proposal.
   - Depende: W2-6
   - Spec: OM (estados y transiciones inmutables, total con precios de inventario)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoStateMachineTest'`
 
-- [ ] **W3-5** Implementar (GREEN) la máquina de estados y el cálculo de total del pedido hasta dejar los tests de W3-4 en verde.
+- [x] **W3-5** Implementar (GREEN) la máquina de estados y el cálculo de total del pedido hasta dejar los tests de W3-4 en verde.
   - Aceptación: ninguna transición prohibida altera el estado y el total ignora el precio enviado por el cliente.
   - Depende: W3-4
   - Spec: OM (estados y total), ISC (consistencia sin transacción distribuida)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='PedidoStateMachineTest'`
 
-- [ ] **W3-6** Implementar validación de entrada y `@RestControllerAdvice` con `application/problem+json` (RFC 9457) y códigos estables `400/404/409/503`.
+- [x] **W3-6** Implementar validación de entrada y `@RestControllerAdvice` con `application/problem+json` (RFC 9457) y códigos estables `400/404/409/503`.
   - Aceptación: pedido sin líneas o con cantidad ≤ 0 responde 400 tipado sin persistir; transición prohibida responde 409 tipado.
   - Depende: W3-3, W3-5
   - Spec: OM (líneas inválidas, transiciones prohibidas), ISC (error tipado)
   - Verificación: `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*ErrorHandling*'`
 
-- [ ] **W3-7** Añadir filtro que estampa `X-Service-Instance` con el identificador de instancia en toda respuesta de negocio.
+- [x] **W3-7** Añadir filtro que estampa `X-Service-Instance` con el identificador de instancia en toda respuesta de negocio.
   - Aceptación: cada respuesta informa el identificador y coincide con el `instance-id` publicado en Eureka.
   - Depende: W3-3
   - Spec: GW (exposición de la instancia que atendió), `design.md` §13
   - Verificación: `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*InstanceHeader*'`
 
-- [ ] **W3-8** Publicar los contratos OpenAPI de ambos servicios con springdoc y generar `requests/` con una solicitud por operación contra el punto de entrada único.
+- [x] **W3-8** Publicar los contratos OpenAPI de ambos servicios con springdoc y generar `requests/` con una solicitud por operación contra el punto de entrada único.
   - Aceptación: las nueve operaciones del proposal tienen solicitud de ejemplo y ninguna apunta a una instancia concreta.
   - Depende: W3-3
   - Spec: TD (colección de solicitudes ejecutable)
