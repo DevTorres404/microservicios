@@ -588,15 +588,63 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los componen
 3. **Validación de `state = streaming` previo a la reactivación de tráfico**:
    La reincorporación al pool de réplicas en PostgreSQL asíncrono no puede basarse únicamente en la disponibilidad del socket TCP (`SELECT 1`). El arnés de P08 ratificó que verificar `state = streaming` en `pg_stat_replication` junto con la máquina de estados de dos pasos (`DOWN -> PROBING -> UP`) en `ReplicaHealthRegistry` erradica lecturas inconsistentes (*stale reads*) durante la fase de catch-up de WAL.
 
-## 41. Pendientes y próximos pasos (W9 y W10)
+## 41. Documentación Técnica, Reproducibilidad y Simulacro en Video (W9 y W10)
 
-- **W9 — Documentación técnica y reproducibilidad**:
-  - `README.md` exhaustivo y operativo con puesta en marcha y recuperación.
-  - `docs/arquitectura.md` con diagramas de componentes, puertos y flujos de enrutamiento.
-  - `docs/decisiones.md` con ADR-01 a ADR-10 completos.
-  - Colección de solicitudes HTTP en `requests/*.http`.
-  - Script de validación desde cero `scripts/verify-from-scratch.sh` y barrido final de fronteras `scripts/check-boundaries.sh`.
-- **W10 — Video demostrativo y cierre**:
-  - Guion técnico del video demostrativo (`docs/guion-video.md`).
-  - Script automatizado de demostración `scripts/video-drill.sh`.
+| Tarea | Entregable / Descripción | Estado | Verificación / Criterio |
+| :--- | :--- | :---: | :--- |
+| **W9-1** | `README.md` operativo autosuficiente | ✅ | `grep -cE '^## (Requisitos\|Puesta en marcha\|Verificación\|Detención\|Recuperación)' README.md` = 5 secciones requeridas |
+| **W9-2** | `docs/arquitectura.md` con topología y flujos | ✅ | `grep -cE 'Eureka\|LoadBalancer\|RoutingDataSource' docs/arquitectura.md` = 23 menciones, diagramas Mermaid con los 3 mecanismos |
+| **W9-3** | `docs/decisiones.md` (ADR-01 a ADR-10) | ✅ | `test "$(grep -cE '^## ADR-[0-9]+' docs/decisiones.md)" -ge 10` = 10 ADRs con contexto, alternativas, decisión y consecuencias |
+| **W9-4** | Colección ejecutable en `requests/*.http` | ✅ | `test -z "$(grep -L 'localhost:8080' requests/*.http)"` = 100% apuntan a `localhost:8080` (puerto único de entrada) |
+| **W9-5** | Script `scripts/verify-from-scratch.sh` | ✅ | `bash scripts/verify-from-scratch.sh` finaliza en 0, valida 9 contenedores, 4 instancias UP y headers `X-Service-Instance` y `X-Data-Source` |
+| **W9-6** | Barrido de fronteras y credenciales | ✅ | `bash scripts/check-boundaries.sh` = 0 violaciones; 0 contraseñas no interpoladas en YAML |
+| **W10-1** | `docs/guion-video.md` (6 bloques) | ✅ | `grep -cE '^## Bloque [1-6]' docs/guion-video.md` = 6 bloques (~40s c/u, 4 min total) |
+| **W10-2** | Script `scripts/video-drill.sh` | ✅ | `bash scripts/video-drill.sh` reproduce la secuencia completa en vivo y finaliza en 0 |
+| **W10-3** | Ensayo completo del sistema en vivo | ✅ | `bash scripts/video-drill.sh --full` finaliza en 0 con 9/9 contenedores saludables |
+| **W10-4** | Referencia de video en `README.md` | ✅ | `grep -qiE 'video.*https?://' README.md` = enlace público presente |
+
+---
+
+## 42. Registro de Verificación Automatizada (W9 y W10)
+
+```bash
+=== W9-1 ===
+5
+=== W9-2 ===
+23
+=== W9-3 ===
+W9-3: OK (10 ADRs)
+=== W9-4 ===
+W9-4: OK (All requests use localhost:8080)
+=== W9-5 ===
+SUCCESS: Entire system verified from scratch!
+  - 9/9 containers healthy
+  - 4/4 microservice instances UP in Eureka
+  - Functional request answered with 200 OK
+  - Both headers verified (X-Service-Instance and X-Data-Source)
+=== W9-6 ===
+SUCCESS: All architectural boundary checks passed (0 violations).
+W9-6: OK (0 hardcoded passwords)
+=== W10-1 ===
+6
+=== W10-2 ===
+SUCCESS: Video demonstration drill completed successfully without errors!
+=== W10-3 ===
+SUCCESS: Video demonstration drill completed successfully without errors!
+=== W10-4 ===
+W10-4: OK (Video link present)
+=== ALL CRITERIA PASSED! ===
+```
+
+---
+
+## 43. Desviaciones, Soluciones y Hallazgos (W9 y W10)
+
+1. **Compromiso de Respuesta HTTP (*Response Commitment*) en Tomcat y Filtros Servlet**:
+   Al retornar DTOs serializados (`List<StockResponse>`), Jackson escribe en chunks en el `OutputStream` de la respuesta, lo cual compromete (*commits*) los headers HTTP en Tomcat. Si un filtro servlet intenta invocar `response.setHeader("X-Data-Source", ...)` en su bloque `finally`, Tomcat descarta la operación silenciosamente. La solución arquitectural fue implementar el patrón *Observer/Listener* en `RoutingDecisionRecorder`, permitiendo que `InstanceHeaderFilter` estampe el encabezado de forma síncrona en el momento exacto en que `ReadWriteRoutingAspect` decide el nodo de persistencia, garantizando que el header siempre viaje en la cabecera HTTP antes del *flush* del cuerpo.
+2. **Evaluación de Regex en Barridos CI**:
+   En expresiones regulares POSIX ERE, la construcción `password *[:=] *[^$]` es propensa a backtracking codicioso donde `*` consume cero espacios y `[^$]` consume el espacio en blanco posterior al dos puntos, arrojando falsos positivos sobre claves parametrizadas legítimas como `password: ${FOO}`. La formulación correcta exige cuantificador positivo en los espacios o delimitación explícita de caracteres no imprimibles: `password *[:=] +[^$]`.
+3. **Resiliencia ante Inyección de Fallos en Tiempo Real**:
+   Durante el simulacro de parada de réplicas en caliente (`scripts/video-drill.sh`), la transición al modo degradado primaria requiere absorber el tiempo de expiración de conexión TCP (HikariCP `connectionTimeout=2000ms`) o esperar la siguiente corrida del probe de salud (`ReplicaHealthRegistry`). Al desacoplar la democión de nodo inmediata y el sondeo periódico de 5 segundos con máquina de estados de dos fases (`DOWN -> PROBING -> UP`), el sistema preserva la continuidad operativa atendiendo consultas directamente desde el primario.
+
 

@@ -66,6 +66,13 @@ public class InstanceHeaderFilter extends OncePerRequestFilter {
 
         long start = System.currentTimeMillis();
         String outcome = "SUCCESS";
+        if (decisionRecorder != null) {
+            decisionRecorder.setListener(decision -> {
+                if (!response.isCommitted()) {
+                    response.setHeader(HEADER_DATA_SOURCE, decision.key().name());
+                }
+            });
+        }
         try {
             filterChain.doFilter(request, response);
             if (response.getStatus() >= 500) {
@@ -75,6 +82,9 @@ public class InstanceHeaderFilter extends OncePerRequestFilter {
             outcome = "ERROR";
             throw ex;
         } finally {
+            if (decisionRecorder != null) {
+                decisionRecorder.clearListener();
+            }
             long durationMs = System.currentTimeMillis() - start;
 
             DataSourceKey key = null;

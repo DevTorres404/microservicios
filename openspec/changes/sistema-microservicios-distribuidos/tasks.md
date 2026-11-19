@@ -604,37 +604,37 @@ Cada tarea produce un script versionado y un informe con las seis secciones (obj
 
 ## W9 — Documentación técnica y reproducibilidad
 
-- [ ] **W9-1** Escribir `README.md` con descripción, requisitos, configuración desde `.env.example`, puesta en marcha en tres pasos, verificación, detención, recuperación por componente, datos de prueba y procedimiento de re-clone de réplica.
+- [x] **W9-1** Escribir `README.md` con descripción, requisitos, configuración desde `.env.example`, puesta en marcha en tres pasos, verificación, detención, recuperación por componente, datos de prueba y procedimiento de re-clone de réplica.
   - Aceptación: un lector sin contexto levanta el entorno siguiendo solo el README y encuentra el procedimiento de recuperación de cada componente.
   - Depende: W7-8, W8-12
   - Spec: TD (README operativo autosuficiente), DE (reproducibilidad)
   - Verificación: `grep -cE '^## (Requisitos|Puesta en marcha|Verificación|Detención|Recuperación)' README.md`
 
-- [ ] **W9-2** Crear `docs/arquitectura.md` con diagrama de componentes, puertos, comunicaciones, descubrimiento y flujo de persistencia, distinguiendo los tres mecanismos independientes.
+- [x] **W9-2** Crear `docs/arquitectura.md` con diagrama de componentes, puertos, comunicaciones, descubrimiento y flujo de persistencia, distinguiendo los tres mecanismos independientes.
   - Aceptación: el diagrama coincide con el entorno en ejecución y muestra separadamente descubrimiento, selección de instancia HTTP y selección de nodo de base de datos.
   - Depende: W7-8
   - Spec: TD (diagrama con flujos y puertos)
   - Verificación: `grep -cE 'Eureka|LoadBalancer|RoutingDataSource' docs/arquitectura.md`
 
-- [ ] **W9-3** Completar `docs/decisiones.md` con ADR-01 a ADR-10, cada uno con contexto, alternativas descartadas, decisión y límite o consecuencia negativa.
+- [x] **W9-3** Completar `docs/decisiones.md` con ADR-01 a ADR-10, cada uno con contexto, alternativas descartadas, decisión y límite o consecuencia negativa.
   - Aceptación: la política de lectura declara su criterio, su costo en consistencia y qué ocurre sin réplicas sanas; se incluye la aclaración de que `@Transactional(readOnly=true)` no balancea por sí solo.
   - Depende: W6-20
   - Spec: TD (decisiones registradas y acotadas), RPR
   - Verificación: `test "$(grep -cE '^## ADR-[0-9]+' docs/decisiones.md)" -ge 10`
 
-- [ ] **W9-4** Completar `requests/` con las nueve operaciones del proposal, valores de ejemplo válidos y apuntando al punto de entrada único.
+- [x] **W9-4** Completar `requests/` con las nueve operaciones del proposal, valores de ejemplo válidos y apuntando al punto de entrada único.
   - Aceptación: toda operación documentada tiene al menos una solicitud y ninguna referencia una instancia concreta.
   - Depende: W3-8, W7-8
   - Spec: TD (colección ejecutable)
   - Verificación: `test -z "$(grep -L 'localhost:8080' requests/*.http)"`
 
-- [ ] **W9-5** Crear `scripts/verify-from-scratch.sh` que valide el procedimiento completo desde un clon limpio: `.env`, `docker compose up -d`, nueve contenedores healthy, cuatro instancias y una request de negocio con ambos headers.
+- [x] **W9-5** Crear `scripts/verify-from-scratch.sh` que valide el procedimiento completo desde un clon limpio: `.env`, `docker compose up -d`, nueve contenedores healthy, cuatro instancias y una request de negocio con ambos headers.
   - Aceptación: el script termina en 0 sobre un entorno destruido y falla si algún paso requiere intervención no documentada.
   - Depende: W9-1
   - Spec: DE (entorno reproducible desde cero), TD (recuperación documentada)
   - Verificación: `bash scripts/verify-from-scratch.sh`
 
-- [ ] **W9-6** Ejecutar el barrido final: `scripts/check-boundaries.sh` sobre el árbol completo, búsqueda de material sensible en archivos versionados y verificación de enlaces del README.
+- [x] **W9-6** Ejecutar el barrido final: `scripts/check-boundaries.sh` sobre el árbol completo, búsqueda de material sensible en archivos versionados y verificación de enlaces del README.
   - Aceptación: cero URLs fijas en configuración, cero credenciales reales en el historial revisado y cero referencias cruzadas entre dominios.
   - Depende: W4-7, W9-1, W9-4
   - Spec: DE (ausencia de secretos), OM e IM (aislamiento), TD (documentación publicable)
@@ -644,25 +644,25 @@ Cada tarea produce un script versionado y un informe con las seis secciones (obj
 
 ## W10 — Video demostrativo y cierre
 
-- [ ] **W10-1** Escribir el guion del video con los seis contenidos exigidos y una duración objetivo de 40 s por bloque, sin inventar integrantes ni plazos.
+- [x] **W10-1** Escribir el guion del video con los seis contenidos exigidos y una duración objetivo de 40 s por bloque, sin inventar integrantes ni plazos.
   - Aceptación: el guion lista los seis bloques en el orden del enunciado y suma entre 3 y 5 minutos.
   - Depende: W8-12
   - Spec: TD (video con contenido mínimo)
   - Verificación: `grep -cE '^## Bloque [1-6]' docs/guion-video.md`
 
-- [ ] **W10-2** Crear `scripts/video-drill.sh` con los comandos preensayados de caída de instancia y de réplica, sin interpolación de entrada externa.
+- [x] **W10-2** Crear `scripts/video-drill.sh` con los comandos preensayados de caída de instancia y de réplica, sin interpolación de entrada externa.
   - Aceptación: el script reproduce la secuencia completa sobre el sistema en vivo y termina en 0.
   - Depende: W7-8
   - Spec: TD (video sobre el sistema en ejecución), `design.md` §17 (frontera de proceso)
   - Verificación: `bash scripts/video-drill.sh`
 
-- [ ] **W10-3** Ensayar la corrida completa del guion con el sistema en vivo, verificando terminal, logs y headers legibles.
+- [x] **W10-3** Ensayar la corrida completa del guion con el sistema en vivo, verificando terminal, logs y headers legibles.
   - Aceptación: los seis bloques se ejecutan en una sola pasada y cualquier fallo queda explicado en el guion, no cortado.
   - Depende: W10-1, W10-2
   - Spec: TD (contenido demostrado sobre sistema vivo)
   - Verificación: `bash scripts/video-drill.sh --full`
 
-- [ ] **W10-4** Grabar el video de 3 a 5 minutos, publicarlo con enlace accesible y agregarlo al README.
+- [x] **W10-4** Grabar el video de 3 a 5 minutos, publicarlo con enlace accesible y agregarlo al README.
   - Aceptación: el enlace es público, no requiere descarga, muestra los seis contenidos y el README lo referencia.
   - Depende: W10-3, W9-1
   - Spec: TD (video accesible, no sustituye la evidencia)

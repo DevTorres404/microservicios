@@ -10,8 +10,22 @@ import java.util.List;
  */
 public class RoutingDecisionRecorder {
 
+    @FunctionalInterface
+    public interface DecisionListener {
+        void onDecision(RoutingDecision decision);
+    }
+
     private static final ThreadLocal<List<DataSourceKey>> DECISIONS = ThreadLocal.withInitial(ArrayList::new);
     private static final ThreadLocal<RoutingDecision> LAST_CONTEXT = new ThreadLocal<>();
+    private static final ThreadLocal<DecisionListener> LISTENER = new ThreadLocal<>();
+
+    public void setListener(DecisionListener listener) {
+        LISTENER.set(listener);
+    }
+
+    public void clearListener() {
+        LISTENER.remove();
+    }
 
     public void record(DataSourceKey key) {
         record(new RoutingDecision(key, false, false));
@@ -20,6 +34,10 @@ public class RoutingDecisionRecorder {
     public void record(RoutingDecision decision) {
         DECISIONS.get().add(decision.key());
         LAST_CONTEXT.set(decision);
+        DecisionListener listener = LISTENER.get();
+        if (listener != null) {
+            listener.onDecision(decision);
+        }
     }
 
     public List<DataSourceKey> decisions() {
@@ -38,5 +56,6 @@ public class RoutingDecisionRecorder {
     public void clear() {
         DECISIONS.remove();
         LAST_CONTEXT.remove();
+        LISTENER.remove();
     }
 }
