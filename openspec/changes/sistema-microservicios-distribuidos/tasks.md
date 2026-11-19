@@ -262,43 +262,43 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
 
 ## W4 — Comunicación entre servicios, resiliencia y compensación
 
-- [ ] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
+- [x] **W4-1** Declarar `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con `spring-cloud-starter-loadbalancer`, sin URL, host ni puerto en configuración.
   - Aceptación: la llamada se resuelve por nombre lógico y la configuración no contiene destinos fijos.
   - Depende: W3-2, W3-3, W1-1
   - Spec: ISC (llamada real por nombre lógico), SE (localización exclusiva por nombre lógico)
   - Verificación: `grep -rn 'servicio-inventario' servicio-pedidos/src/main/java | grep -q FeignClient`
 
-- [ ] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
+- [x] **W4-2** Configurar timeouts de Feign (conexión 500 ms, lectura 1500 ms) y `Retryer` de un solo reintento limitado a errores de conexión.
   - Aceptación: una dependencia bloqueada produce fallo acotado dentro de 2 s y no reintenta errores de negocio.
   - Depende: W4-1
   - Spec: ISC (timeout explícito y acotado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*FeignTimeout*'`
 
-- [ ] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
+- [x] **W4-3** Configurar el circuit breaker de `inventario` (ventana 10, mínimo 5 llamadas, 50 %, apertura 10 s, 3 llamadas en semiabierto) con `fallbackFactory` y traducción a `503` `code=INVENTARIO_NO_DISPONIBLE`.
   - Aceptación: con inventario caído, la llamada falla rápido sin tocar la red y el cliente recibe 503 tipado con `correlationId`.
   - Depende: W4-2
   - Spec: ISC (circuit breaker, error tipado)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*CircuitBreaker*'`
 
-- [ ] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
+- [x] **W4-4** Implementar la orquestación de creación de pedido: Tx1 `PENDIENTE` en primario, reserva por Feign, Tx2 `CONFIRMADO` con total de inventario; `409` con SKU faltantes deja el pedido `RECHAZADO` sin reserva.
   - Aceptación: stock suficiente confirma y descuenta exactamente lo pedido; una línea insuficiente no descuenta ningún SKU.
   - Depende: W4-3, W3-5
   - Spec: OM (reserva atómica, rechazo por stock), ISC (consistencia sin transacción distribuida)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoCreation*'`
 
-- [ ] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
+- [x] **W4-5** Implementar la liberación compensatoria best-effort cuando falla la comunicación posterior a una reserva, con `WARN` y métrica sin revertir la cancelación.
   - Aceptación: el pedido permanece en un estado honesto, la reserva aplicada se libera y un fallo de liberación solo deja `WARN` y métrica.
   - Depende: W4-4
   - Spec: ISC (compensación y consistencia), OM (cancelación con liberación best-effort)
   - Verificación: `mvn -q -pl servicio-pedidos -am test -Dtest='*Compensation*'`
 
-- [ ] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
+- [x] **W4-6** Escribir el test de idempotencia de extremo a extremo: reintento de la misma reserva no aumenta el stock consumido y devuelve resultado equivalente.
   - Aceptación: dos llamadas con el mismo `pedidoId` dejan el stock igual y la segunda respuesta es equivalente a la primera.
   - Depende: W4-4, W3-2
   - Spec: IM (idempotencia de la reserva), ISC (reintento no duplica consumo)
   - Verificación: `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*Idempotency*'`
 
-- [ ] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
+- [x] **W4-7** Crear `scripts/check-boundaries.sh` con tres verificaciones: cero host/puerto fijo en `application*.yml` de los servicios, cero referencias cruzadas entre `pedidos_db` e `inventario_db`, cero importaciones del dominio del otro servicio.
   - Aceptación: el script termina en 0 y falla si aparece cualquiera de las tres violaciones.
   - Depende: W4-1, W2-8
   - Spec: OM (aislamiento del dominio), IM (propiedad exclusiva), SE (sin destinos fijos), reglas `apply` de `config.yaml`

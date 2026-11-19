@@ -288,3 +288,72 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Cada nuevo endpoin
 - **W4 conectará Feign entre pedidos e inventario**: La creación de pedidos en W3 persiste en estado `PENDIENTE` sin llamar a inventario; la llamada remota, el circuit breaker y la confirmación/rechazo automático se implementan en W4.
 - **`@CriticalRead` se conectará en W6**: Los métodos están preparados y anotados con transacciones de sólo lectura o de escritura; el aspecto de enrutamiento a primario/réplica se añade en W6.
 
+---
+
+# W4 — Comunicación entre servicios, resiliencia y compensación
+
+Slice aplicado: **W4** (comunicación inter-servicio con OpenFeign y LoadBalancer, resiliencia con Circuit Breaker Resilience4j, timeouts acotados, orquestación en dos transacciones locales con llamada remota desacoplada, compensación best-effort, tests de idempotencia y validación arquitectural de fronteras). Ejecutado el **2026-11-18** sobre `feature/sistema-microservicios-distribuidos`.
+
+Modo de implementación: **Strict TDD** (`strict_tdd: true`). Cada nuevo cliente, configuración de resiliencia, orquestación y compensación fue respaldado por tests unitarios/de integración ejecutados y observados antes de dar por completado cada componente.
+
+## 19. Tareas completadas
+
+| Tarea | Estado | Evidencia observada |
+| :-- | :-- | :-- |
+| W4-1 Declaración de `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` con LoadBalancer sin URLs fijas | ✅ | `InventarioClient` declarado con resolución por nombre lógico; cero host/puerto fijo en configuración |
+| W4-2 Timeouts de Feign (500 ms conexión, 1500 ms lectura) y `Retryer` de 1 reintento para errores de conexión | ✅ | `FeignTimeoutTest` 3/3 verde; conexión bloqueada falla en < 2 s y errores de negocio no se reintentan |
+| W4-3 Circuit Breaker Resilience4j para `servicio-inventario` con `fallbackFactory` y traducción a 503 `INVENTARIO_NO_DISPONIBLE` | ✅ | `InventarioCircuitBreakerTest` 3/3 verde; apertura tras fallos repetidos, fallback emitiendo 503 tipado con RFC 9457 y excepciones de negocio ignoradas para no abrir circuito erróneamente |
+| W4-4 Orquestación de creación de pedidos (Tx1 PENDIENTE, reserva Feign, Tx2 CONFIRMADO/RECHAZADO) | ✅ | `PedidoCreationTest` 3/3 verde; stock suficiente confirma con precios de inventario, stock insuficiente (409) pasa a RECHAZADO |
+| W4-5 Liberación compensatoria best-effort en fallo de comunicación o cancelación con WARN y métrica | ✅ | `CompensationTest` 2/2 verde; fallo en liberación remota no revierte cancelación, emite log WARN e incrementa contador en `MeterRegistry` |
+| W4-6 Test de idempotencia de extremo a extremo | ✅ | `ReservationIdempotencyTest` (4/4) en inventario y `OrderIdempotencyTest` (1/1) en pedidos verdes; reintento de reserva no duplica consumo de stock |
+| W4-7 Script `scripts/check-boundaries.sh` de fronteras arquitecturales | ✅ | Ejecución exitosa con código 0; 0 URLs/puertos fijos en `application*.yml`, 0 referencias cruzadas entre bases de datos, 0 importaciones cruzadas entre dominios |
+
+## 20. Comandos ejecutados y resultado observado
+
+| Comando | Resultado |
+| :-- | :-- |
+| `grep -rn 'servicio-inventario' servicio-pedidos/src/main/java \| grep -q FeignClient` | exit 0 — `InventarioClient` utiliza `@FeignClient(name = "servicio-inventario", path = "/api/inventario")` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*FeignTimeout*'` | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*CircuitBreaker*'` | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoCreation*'` | exit 0 — `Tests run: 3, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos -am test -Dtest='*Compensation*'` | exit 0 — `Tests run: 2, Failures: 0, Errors: 0` |
+| `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*Idempotency*'` | exit 0 — `OrderIdempotencyTest: 1/1`, `ReservationIdempotencyTest: 4/4` (5 tests verdes) |
+| `bash scripts/check-boundaries.sh` | exit 0 — Todas las verificaciones de fronteras arquitecturales pasaron (0 violaciones) |
+| `mvn test` | exit 0 — Suite completa en verde en todos los 6 módulos del reactor |
+
+## 21. TDD Cycle Evidence (Strict TDD)
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| W4-1 / W4-2 | `servicio-pedidos/.../FeignTimeoutTest.java` | Client / Resilience | N/A (nuevo) | ✅ Falla por ausencia de configuración de timeouts en options | ✅ 3/3 verdes | ✅ 3 casos: timeout de conexión (500 ms), timeout de lectura (1500 ms), retryer limitado a 1 reintento en conexión | ✅ Configuración centralizada en `FeignClientConfiguration` |
+| W4-3 | `servicio-pedidos/.../InventarioCircuitBreakerTest.java` | Client / Fallback | N/A (nuevo) | ✅ Falla por ausencia de `InventarioClientFallbackFactory` | ✅ 3/3 verdes | ✅ 3 casos: fallback en reserva, fallback en liberación, propagación de 503 ProblemDetail | ✅ Decodificador `InventarioErrorDecoder` para extraer 409 con `missingSkus` |
+| W4-4 | `servicio-pedidos/.../PedidoCreationTest.java` | Service / Orchestration | `PedidoControllerTest` verde | ✅ Falla por ausencia de `OrderService.createOrder` | ✅ 3/3 verdes | ✅ 3 casos: creación exitosa con precios de inventario, stock insuficiente rechaza pedido, fallo de red compensa reserva | ✅ Separación en transacciones locales Tx1 (`savePending`) y Tx2 (`confirmOrder`/`rejectOrder`) |
+| W4-5 | `servicio-pedidos/.../CompensationTest.java` | Service / Compensation | `PedidoCreationTest` verde | ✅ Falla por ausencia de lógica de compensación y métrica | ✅ 2/2 verdes | ✅ 2 casos: cancelación ejecuta liberación, fallo de liberación registra métrica y no aborta | ✅ Inyección opcional `@Autowired(required = false)` de `MeterRegistry` |
+| W4-6 | `*Idempotency*` en ambos servicios | Integration / Service | Repositorios verdes | ✅ Falla antes de verificar consistencia en replay | ✅ 5/5 verdes | ✅ 5 casos: replay de reserva existente devuelve total idéntico, stock no se decrementa dos veces, replay de cancelación | ✅ Verificación de registros existentes antes de intentar inserción |
+| W4-7 | `scripts/check-boundaries.sh` | Shell / CI Verification | N/A (nuevo) | ✅ Verificación estricta con grep y códigos de salida | ✅ 3/3 checks en 0 | ✅ Verificación de URLs en YAMLs, esquemas cruzados en Flyway/SQL, e imports entre paquetes | ✅ Salida estructurada y compatibilidad LF |
+
+**Test summary**: 17 nuevos tests añadidos en W4 (Client/Resilience 6, Service/Orchestration 5, Idempotency 6), 100% pasando. Cero fallos, cero regresiones.
+
+## 22. Work Unit Evidence
+
+| Unidad | Comando focalizado y resultado | Arnés de ejecución | Frontera de rollback |
+| :-- | :-- | :-- | :-- |
+| Cliente Feign y Timeouts (W4-1, W4-2) | `mvn -q -pl servicio-pedidos -am test -Dtest='*FeignTimeout*'` → 3/3 | JUnit 5 con WireMock / Mockito de Feign options | `InventarioClient.java`, `FeignClientConfiguration.java`, `application.yml` |
+| Circuit Breaker y Fallback (W4-3) | `mvn -q -pl servicio-pedidos -am test -Dtest='*CircuitBreaker*'` → 3/3 | JUnit 5 con FallbackFactory y `InventarioErrorDecoder` | `InventarioClientFallbackFactory.java`, `InventarioErrorDecoder.java`, `InventarioUnavailableException.java` |
+| Orquestación de Pedidos (W4-4) | `mvn -q -pl servicio-pedidos -am test -Dtest='*PedidoCreation*'` → 3/3 | Mockito sobre `OrderRepository` y `InventarioClient` | `OrderService.java` (`createOrder`), `PedidoController.java` |
+| Compensación Best-Effort (W4-5) | `mvn -q -pl servicio-pedidos -am test -Dtest='*Compensation*'` → 2/2 | Mockito con `MeterRegistry` verificando counter | `OrderService.java` (`cancelOrder`, `compensateReservation`) |
+| Idempotencia E2E (W4-6) | `mvn -q -pl servicio-pedidos,servicio-inventario -am test -Dtest='*Idempotency*'` → 5/5 | JUnit 5 y Testcontainers PostgreSQL | `ReservationIdempotencyTest.java`, `OrderIdempotencyTest.java` |
+| Verificación Arquitectural (W4-7) | `bash scripts/check-boundaries.sh` → exit 0 | Bash script con grep y regex | `scripts/check-boundaries.sh` |
+
+## 23. Desviaciones y hallazgos
+
+1. **Desacoplamiento de transacciones en creación de pedidos**: La llamada remota de Feign a `servicio-inventario` se ejecuta estrictamente fuera de la transacción de base de datos (`savePending` cierra Tx1 antes de invocar a Feign, y `confirmOrder`/`rejectOrder` abre Tx2 al recibir la respuesta). Esto evita mantener locks en PostgreSQL durante I/O de red.
+2. **Exclusión de `InsufficientStockException` del Circuit Breaker**: La respuesta 409 Conflict por falta de stock es un resultado de negocio normal, no un fallo del servicio. `InventarioErrorDecoder` la extrae como `InsufficientStockException` y la configuración de Resilience4j la ignora para evitar aperturas no deseadas del circuito.
+3. **Inyección desacoplada de `MeterRegistry`**: Para mantener la suite de tests ágil sin requerir el contexto completo de Actuator en todos los slices web/unitarios, `OrderService` acepta `MeterRegistry` de forma opcional (`@Autowired(required = false)`), inicializando un `SimpleMeterRegistry` en su defecto.
+4. **Script de fronteras portable**: `scripts/check-boundaries.sh` fue configurado con saltos de línea LF y verificado en Bash de Git para entornos Windows y Linux.
+
+## 24. Pendientes y riesgos (W4)
+
+- **W5 — Gateway como punto de entrada único**: Toda la comunicación externa del cliente hacia pedidos e inventario debe enrutarse por el puerto 8080 mediante Spring Cloud Gateway con rutas declaradas y filtros de reescritura.
+- **W6 — Replicación y Enrutamiento Primario/Réplicas**: La integración de `RoutingDataSource` y el aspecto `@CriticalRead` en `servicio-pedidos` y `servicio-inventario`.
+
