@@ -1,0 +1,21 @@
+=== TIMESTAMP: 20261119_170045Z ===
+--- GET http://localhost:8080/api/pedidos ---
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+X-Correlation-Id: 3ab62db8-6fae-49f1-b7a1-adc18f46fa11
+X-Correlation-Id: 3ab62db8-6fae-49f1-b7a1-adc18f46fa11
+X-Service-Instance: servicio-pedidos:pedidos-2
+Content-Type: application/json
+Date: Thu, 19 Nov 2026 17:00:46 GMT
+
+[]
+--- GET http://localhost:8080/api/inventario ---
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+X-Correlation-Id: faacedf3-3441-4f31-a138-839c7cfe5e07
+X-Correlation-Id: faacedf3-3441-4f31-a138-839c7cfe5e07
+X-Service-Instance: servicio-inventario:inventario-2
+Content-Type: application/json
+Date: Thu, 19 Nov 2026 17:00:47 GMT
+
+[]

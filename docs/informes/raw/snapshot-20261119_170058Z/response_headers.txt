@@ -1,0 +1,12 @@
+=== TIMESTAMP: 20261119_170058Z ===
+--- GET http://localhost:8080/api/pedidos ---
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+X-Correlation-Id: 37c4b9b8-b6ba-4684-9869-f267feba5d24
+X-Correlation-Id: 37c4b9b8-b6ba-4684-9869-f267feba5d24
+X-Service-Instance: servicio-pedidos:pedidos-1
+Content-Type: application/json
+Date: Thu, 19 Nov 2026 17:00:59 GMT
+
+[]
+

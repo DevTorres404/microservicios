@@ -1,0 +1,4 @@
+=== TIMESTAMP: 20261119_170058Z ===
+172.28.0.4|replicator|walreceiver|streaming|async|||
+172.28.0.5|replicator|walreceiver|streaming|async|||
+

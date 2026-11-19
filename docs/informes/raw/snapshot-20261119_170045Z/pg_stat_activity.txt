@@ -1,0 +1,44 @@
+=== TIMESTAMP: 20261119_170045Z ===
+--- Node: pg-primary ---
+|||||
+|postgres||||
+|replicator|walreceiver|172.28.0.4|active|START_REPLICATION 0/6000000 TIMELINE 1
+|replicator|walreceiver|172.28.0.5|active|START_REPLICATION 0/6000000 TIMELINE 1
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|
+|||||
+|||||
+|||||
+--- Node: pg-replica-1 ---
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|SELECT status FROM pg_stat_wal_receiver
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|SELECT status FROM pg_stat_wal_receiver
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+|||||
+|||||
+|||||
+|||||
+--- Node: pg-replica-2 ---
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+pedidos_db|pedidos_app|pedidos-1|172.28.0.7|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+pedidos_db|pedidos_app|pedidos-2|172.28.0.8|idle|
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|
+inventario_db|inventario_app|inventario-1|172.28.0.10|idle|
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|
+inventario_db|inventario_app|inventario-2|172.28.0.9|idle|
+|||||
+|||||
+|||||
+|||||

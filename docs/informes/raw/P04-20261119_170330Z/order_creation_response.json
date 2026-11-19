@@ -1,0 +1,2 @@
+
+{"type":"urn:problem-type:validation-error","title":"Validation Error","status":400,"detail":"Request validation failed","instance":"/api/pedidos","code":"VALIDATION_ERROR","timestamp":"2026-11-19T17:03:31.055962191Z","correlationId":"corr-p04-success-20261119_170330Z","errors":{"customer":"Customer name must not be blank"}}

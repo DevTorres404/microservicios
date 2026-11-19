@@ -1,0 +1,4 @@
+=== TIMESTAMP: 20261119_163903Z ===
+--- GET http://localhost:8080/api/pedidos ---
+
+--- GET http://localhost:8080/api/inventario ---

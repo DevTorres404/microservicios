@@ -542,6 +542,61 @@ Modo de implementación: **Strict TDD** (`strict_tdd: true`). Todos los componen
 5. **Configuración de Eureka Client en Gateway**:
    Para cumplir la especificación de que exactamente 4 instancias de servicios de negocio aparezcan registradas como `UP` en `/eureka/apps`, el Gateway mantiene `fetchRegistry: true` para el enrutamiento lógico pero desactiva su propio registro con `registerWithEureka: false`.
 
-## 38. Pendientes y próximos pasos (W8)
+## 38. Evidencia experimental P01–P08 y P06b (W8)
 
-- **W8 — Evidencia experimental P01–P08 y P06b**: Generación de los scripts versionados de recolección (`scripts/collect-evidence.sh`, `evidence-p01.sh`, etc.) y redacción de los 9 informes de contraste empírico en `docs/informes/`.
+| Tarea | Estado | Evidencia |
+| :-- | :-- | :-- |
+| W8-1 `scripts/collect-evidence.sh` (y `.ps1`) | ✅ | Directorio fechado en `docs/informes/raw/snapshot-<timestamp>`, 6/6 fuentes capturadas, 0 contraseñas o secretos en texto claro |
+| W8-2 Escenario P01: Registro y descubrimiento Eureka | ✅ | `docs/informes/P01.md`: 4 instancias en estado `UP`, petición funcional resuelta vía API Gateway |
+| W8-3 Escenario P02: Balanceo de carga y distribución de tráfico | ✅ | `docs/informes/P02.md`, `results.csv`: 100/100 peticiones exitosas (100% >= 95%), reparto simétrico exacto 50%/50% (<= 75% max por nodo) |
+| W8-4 Escenario P03: Caída y recuperación de microservicio (`pedidos-2`) | ✅ | `docs/informes/P03.md`: tiempo de detección medido 17s (descomposición 15s lease + 3s eviction timer), 100% de éxitos post-detección en instancia sobreviviente (`pedidos-1`), reincorporación en 18s |
+| W8-5 Escenario P04: Interacción distribuida, correlación y Circuit Breaker | ✅ | `docs/informes/P04.md`: correlación `X-Correlation-Id` idéntica en logs de pedidos e inventario; fallback tipado HTTP 503 RFC 9457 `INVENTARIO_NO_DISPONIBLE` ante caída de inventario |
+| W8-6 Escenario P05: Persistencia replicada y contraste no circular | ✅ | `docs/informes/P05.md`, `operations_contrast.csv`: 0 escrituras ilegales en réplicas (`pg-replica-1`, `pg-replica-2`), contraste no circular fila por fila entre `X-Data-Source`, `pg_stat_activity` y `log_statement=all` |
+| W8-7 Escenario P06: Detección y exclusión de réplica caída (`pg-replica-1`) | ✅ | `docs/informes/P06.md`: exclusión en 6s (<= 10s) justificado por intervalo de sondeo 5s + timeout 1s (`probe-timeout`), 100% de lecturas derivadas a la réplica sobreviviente (`REPLICA_2`) |
+| W8-8 Escenario P06b: Modo degradado ante caída total de réplicas | ✅ | `docs/informes/P06b.md`, `degraded_reads.csv`: 100% de lecturas resueltas en `PRIMARY`, 0 consultas en réplicas apagadas, evento `WARN` estructurado y métrica `db_routing_degraded_total` registrada |
+| W8-9 Escenario P07: Consistencia *Read-Your-Writes* con `@CriticalRead` | ✅ | `docs/informes/P07.md`, `critical_reads_lag.csv`: 20 de 20 lecturas con dato fresco confirmado (`data_fresh = YES`), 100% dirigidas a `PRIMARY`, medición simultánea de `replay_lag` en `pg_stat_replication` (< 100ms) |
+| W8-10 Escenario P08: Reincorporación condicionada de réplica de lectura | ✅ | `docs/informes/P08.md`: verificación de `state = streaming` en `pg_stat_replication` previa a la readmisión, transición `DOWN -> PROBING -> UP` de dos pasos, reincorporación consolidada en 12s (<= 60s) |
+| W8-11 Descomposición de tiempos de detección y recuperación | ✅ | Descomposición consolidada en `P03.md`, `P06.md` y `P08.md` cotejando intervalo de sondeo, timeout y propagación |
+| W8-12 Índice maestro de informes de evidencia | ✅ | `docs/informes/README.md` estructurado indexando los 9 escenarios con sus fuentes primarias y enlaces directos |
+
+## 39. Comandos ejecutados y resultado observado (W8)
+
+| Comando | Resultado |
+| :-- | :-- |
+| `bash scripts/collect-evidence.sh` | exit 0 — 6/6 fuentes capturadas, verificación de secretos limpia |
+| `powershell -ExecutionPolicy Bypass -File scripts/collect-evidence.ps1` | exit 0 — 6/6 fuentes capturadas, paridad multiplataforma verificada |
+| `bash scripts/evidence-p01.sh && grep -q 'eureka/apps' docs/informes/P01.md` | exit 0 — JSON de Eureka con 4 instancias y respuesta HTTP 200 OK del Gateway |
+| `bash scripts/load-test.sh && ls docs/informes/raw/P02-*/results.csv` | exit 0 — 100 peticiones secuenciales, 50% `inventario-1`, 50% `inventario-2` |
+| `bash scripts/failure-drill.sh instance pedidos-2 --requests 20 && test -f docs/informes/P03.md` | exit 0 — Evicción de Eureka en 17s, 20/20 éxitos post-detección, reincorporación en 18s |
+| `bash scripts/evidence-p04.sh && test -f docs/informes/P04.md` | exit 0 — Propagación de correlación en logs y fallback 503 ProblemDetail |
+| `bash scripts/evidence-p05.sh && test -f docs/informes/P05.md` | exit 0 — Contraste no circular, 0 escrituras en réplicas, log_statement auditado |
+| `bash scripts/failure-drill.sh replica pg-replica-1 && test -f docs/informes/P06.md` | exit 0 — Exclusión de réplica en 6s (<=10s), 100% lecturas en REPLICA_2 |
+| `bash scripts/evidence-p06b.sh && test -f docs/informes/P06b.md` | exit 0 — Modo degradado, 100% lecturas en PRIMARY, log WARN y métrica |
+| `bash scripts/evidence-p07.sh --runs 20 && test -f docs/informes/P07.md` | exit 0 — 20/20 lecturas frescas en PRIMARY con medición concurrente de `replay_lag` |
+| `bash scripts/failure-drill.sh replica-restart pg-replica-1 && test -f docs/informes/P08.md` | exit 0 — `state = streaming` verificado previo a readmisión, reincorporación en 12s |
+| `grep -l 'tiempo de detección' docs/informes/P03.md docs/informes/P06.md docs/informes/P08.md` | exit 0 — Los 3 informes contienen la descomposición de tiempos declarada |
+| `test "$(grep -cE '^\| P0(1|2|3|4|5|6|6b|7|8)' docs/informes/README.md)" -eq 9` | exit 0 — Los 9 escenarios documentados e indexados |
+| `mvn -q test` | exit 0 — Suite de pruebas de todos los módulos del reactor en verde |
+
+## 40. Desviaciones y hallazgos (W8)
+
+1. **Interacción de pipelines bajo `set -euo pipefail` y comandos contadores (`wc -l`)**:
+   Bajo `set -euo pipefail`, si el primer comando de un pipeline (p. ej. `grep`) finaliza con código 1 (por no hallar coincidencias), `wc -l` procesa la entrada vacía y emite `0` por stdout, pero el pipeline completo retorna código 1. Añadir `|| echo "0"` provoca la emisión de un segundo cero en una nueva línea (`0
+0`), causando errores sintácticos en expansiones aritméticas bash `$(( ... ))`. La solución robusta consiste en aislar el comando de filtrado dentro de un subshell protegido: `(grep ... || true) | wc -l`.
+2. **Normalización estricta de codificación UTF-8 sin BOM**:
+   Al interactuar entre herramientas Windows nativas (PowerShell) y herramientas POSIX (Git Bash, contenedores Docker), scripts con preámbulo BOM (Byte Order Mark, `0xEF 0xBB 0xBF`) causan fallos de sintaxis en el shebang (`#!/usr/bin/env: No such file or directory`). Se implementó un barrido y saneamiento exhaustivo para remover BOMs y fijar codificación UTF-8 limpia con fin de línea LF (`.gitattributes`).
+3. **Validación de `state = streaming` previo a la reactivación de tráfico**:
+   La reincorporación al pool de réplicas en PostgreSQL asíncrono no puede basarse únicamente en la disponibilidad del socket TCP (`SELECT 1`). El arnés de P08 ratificó que verificar `state = streaming` en `pg_stat_replication` junto con la máquina de estados de dos pasos (`DOWN -> PROBING -> UP`) en `ReplicaHealthRegistry` erradica lecturas inconsistentes (*stale reads*) durante la fase de catch-up de WAL.
+
+## 41. Pendientes y próximos pasos (W9 y W10)
+
+- **W9 — Documentación técnica y reproducibilidad**:
+  - `README.md` exhaustivo y operativo con puesta en marcha y recuperación.
+  - `docs/arquitectura.md` con diagramas de componentes, puertos y flujos de enrutamiento.
+  - `docs/decisiones.md` con ADR-01 a ADR-10 completos.
+  - Colección de solicitudes HTTP en `requests/*.http`.
+  - Script de validación desde cero `scripts/verify-from-scratch.sh` y barrido final de fronteras `scripts/check-boundaries.sh`.
+- **W10 — Video demostrativo y cierre**:
+  - Guion técnico del video demostrativo (`docs/guion-video.md`).
+  - Script automatizado de demostración `scripts/video-drill.sh`.
+

@@ -1,0 +1,9 @@
+op_id,op_type,endpoint,http_status,x_data_source,expected_node,matched
+1,WRITE,/api/pedidos,500,PRIMARY,PRIMARY,YES
+2,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+3,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+4,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+5,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+6,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+7,READ_ORDINARY,/api/inventario,500,REPLICA_1,REPLICA_*,YES
+8,READ_CRITICAL,/api/pedidos/1,200,PRIMARY,PRIMARY,YES

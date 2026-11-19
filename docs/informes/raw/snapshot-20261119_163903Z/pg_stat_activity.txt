@@ -1,0 +1,10 @@
+=== TIMESTAMP: 20261119_163903Z ===
+--- Node: pg-primary ---
+Error response from daemon: container 2ecb276685bc315a2283dac2d3a9ce6e8c997b8d8af9e014a8a42c3ea3f22ff3 is not running
+psql failed on pg-primary
+--- Node: pg-replica-1 ---
+Error response from daemon: container ad6b7b07e90b564dde110fbc6dcb6cd302c031cfef267de3ffc15d521920d19c is not running
+psql failed on pg-replica-1
+--- Node: pg-replica-2 ---
+Error response from daemon: container 718ec153b16de0371f0934cba7c3179def16158ad4f812a5a20eea558ca81f85 is not running
+psql failed on pg-replica-2

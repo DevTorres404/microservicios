@@ -528,73 +528,73 @@ Ciclo RED→GREEN explícito: las tareas de test preceden a su implementación. 
 
 Cada tarea produce un script versionado y un informe con las seis secciones (objetivo, procedimiento, esperado, obtenido, evidencia, análisis) que cita la fuente primaria exigida por `EE`. La evidencia cruda se guarda en `docs/informes/raw/<escenario>-<timestamp>/`.
 
-- [ ] **W8-1** Crear `scripts/collect-evidence.sh` (y `.ps1`) que capture `/eureka/apps`, `/actuator/metrics`, headers de respuesta, `pg_stat_activity`, `pg_stat_replication` y `pg_stat_wal_receiver` con marcas temporales, filtrando `POSTGRES_PASSWORD` de la salida.
+- [x] **W8-1** Crear `scripts/collect-evidence.sh` (y `.ps1`) que capture `/eureka/apps`, `/actuator/metrics`, headers de respuesta, `pg_stat_activity`, `pg_stat_replication` y `pg_stat_wal_receiver` con marcas temporales, filtrando `POSTGRES_PASSWORD` de la salida.
   - Aceptación: el script genera un directorio fechado con las seis fuentes y falla si detecta la contraseña en la evidencia.
   - Depende: W7-8
   - Spec: EE (evidencia generada por script, contraste no circular), TD (sin secretos)
   - Verificación: `bash scripts/collect-evidence.sh`
 
-- [ ] **W8-2** Ejecutar y documentar **P01**: `scripts/evidence-p01.sh` captura `/eureka/apps` crudo con los cuatro `instance-id` y una request funcional por el gateway.
+- [x] **W8-2** Ejecutar y documentar **P01**: `scripts/evidence-p01.sh` captura `/eureka/apps` crudo con los cuatro `instance-id` y una request funcional por el gateway.
   - Aceptación: `docs/informes/P01.md` cita el JSON crudo con cuatro identificadores distintos y la request resuelta por nombre lógico.
   - Depende: W8-1, W7-8
   - Spec: SE (registro con identificador único, visibilidad del estado), EE (fuente P01)
   - Verificación: `bash scripts/evidence-p01.sh && grep -q 'eureka/apps' docs/informes/P01.md`
 
-- [ ] **W8-3** Ejecutar y documentar **P02**: `scripts/load-test.sh` envía 100 solicitudes por el gateway y escribe CSV con timestamp, código e instancia.
+- [x] **W8-3** Ejecutar y documentar **P02**: `scripts/load-test.sh` envía 100 solicitudes por el gateway y escribe CSV con timestamp, código e instancia.
   - Aceptación: el informe deriva del CSV el total de éxitos (≥95), las dos instancias con al menos una respuesta y el máximo por instancia (≤75 %), y cita el log de acceso de cada instancia.
   - Depende: W8-1, W7-8
   - Spec: LB (distribución sobre 100 solicitudes, evidencia por solicitud), EE (fuente P02)
   - Verificación: `bash scripts/load-test.sh && ls docs/informes/raw/P02-*/results.csv >/dev/null 2>&1`
 
-- [ ] **W8-4** Ejecutar y documentar **P03**: `scripts/failure-drill.sh instance` detiene `pedidos-2`, envía 20 solicitudes, lo reinicia y mide detección y reincorporación.
+- [x] **W8-4** Ejecutar y documentar **P03**: `scripts/failure-drill.sh instance` detiene `pedidos-2`, envía 20 solicitudes, lo reinicia y mide detección y reincorporación.
   - Aceptación: el informe declara éxitos posteriores a la detección (≥90 %), la ventana transitoria cuantificada y su causa (cache del LB y lease de Eureka), con muestreo de `/eureka/apps` y log de lease fechados.
   - Depende: W8-1, W7-8
   - Spec: LB (continuidad, ventana cuantificada, recuperación observable), SE (expulsión y re-registro), EE (fuentes P03 y tiempos)
   - Verificación: `bash scripts/failure-drill.sh instance pedidos-2 --requests 20`
 
-- [ ] **W8-5** Ejecutar y documentar **P04**: `scripts/evidence-p04.sh` crea un pedido con stock suficiente y repite el caso con inventario detenido.
+- [x] **W8-5** Ejecutar y documentar **P04**: `scripts/evidence-p04.sh` crea un pedido con stock suficiente y repite el caso con inventario detenido.
   - Aceptación: el informe muestra el mismo `X-Correlation-Id` en los logs de pedidos e inventario, la instancia destino registrada y el `503` tipado del caso de fallo.
   - Depende: W8-1, W7-8
   - Spec: ISC (llamada real, error tipado, trazabilidad), OM (creación válida), EE (fuente P04)
   - Verificación: `bash scripts/evidence-p04.sh`
 
-- [ ] **W8-6** Ejecutar y documentar **P05**: `scripts/evidence-p05.sh` ejecuta escrituras y lecturas y contrasta `X-Data-Source` con `pg_stat_activity` por nodo y `log_statement=all`.
+- [x] **W8-6** Ejecutar y documentar **P05**: `scripts/evidence-p05.sh` ejecuta escrituras y lecturas y contrasta `X-Data-Source` con `pg_stat_activity` por nodo y `log_statement=all`.
   - Aceptación: el informe demuestra cero sentencias de escritura en réplicas, reparto de lecturas entre ambas réplicas y coincidencia fila por fila entre header, actividad y log.
   - Depende: W8-1, W7-7, W6-20
   - Spec: RPR (escrituras en primario, lecturas en réplica, evidencia no circular), OM (nodo por tipo de operación), EE (fuente P05)
   - Verificación: `bash scripts/evidence-p05.sh`
 
-- [ ] **W8-7** Ejecutar y documentar **P06**: `scripts/failure-drill.sh replica pg-replica-1` detiene una réplica y ejecuta lecturas sostenidas.
+- [x] **W8-7** Ejecutar y documentar **P06**: `scripts/failure-drill.sh replica pg-replica-1` detiene una réplica y ejecuta lecturas sostenidas.
   - Aceptación: el informe muestra la exclusión en ≤10 s, el 100 % de las lecturas posteriores en la réplica restante y el log de health check con intervalo, timeout y causa `probe-timeout`.
   - Depende: W8-1, W8-4, W7-8
   - Spec: RPR (exclusión por health check, atribución al sondeo), PRC, EE (fuente P06 y tiempos)
   - Verificación: `bash scripts/failure-drill.sh replica pg-replica-1`
 
-- [ ] **W8-8** Ejecutar y documentar **P06b**: con ambas réplicas detenidas, `scripts/evidence-p06b.sh` ejecuta lecturas ordinarias y captura el primario y las réplicas.
+- [x] **W8-8** Ejecutar y documentar **P06b**: con ambas réplicas detenidas, `scripts/evidence-p06b.sh` ejecuta lecturas ordinarias y captura el primario y las réplicas.
   - Aceptación: el informe muestra el 100 % de lecturas en el primario, ninguna en réplicas, un `WARN` de degradado y el incremento de `db_routing_degraded_total`.
   - Depende: W8-1, W8-7
   - Spec: RPR (modo degradado), EE (fuente P06b)
   - Verificación: `bash scripts/evidence-p06b.sh`
 
-- [ ] **W8-9** Ejecutar y documentar **P07**: `scripts/evidence-p07.sh` corre 20 ciclos de escritura más lectura crítica inmediata y registra `pg_stat_replication.replay_lag` del instante exacto de cada lectura.
+- [x] **W8-9** Ejecutar y documentar **P07**: `scripts/evidence-p07.sh` corre 20 ciclos de escritura más lectura crítica inmediata y registra `pg_stat_replication.replay_lag` del instante exacto de cada lectura.
   - Aceptación: el informe reporta 20/20 con el dato recién escrito y el `replay_lag` con marca temporal y unidad en cada corrida, explicando el caso >100 ms si ocurre.
   - Depende: W8-1, W6-20
   - Spec: RPR (read-your-writes), PRC (retraso medido en el momento), EE (fuente P07)
   - Verificación: `bash scripts/evidence-p07.sh --runs 20`
 
-- [ ] **W8-10** Ejecutar y documentar **P08**: `scripts/failure-drill.sh replica-restart pg-replica-1` reinicia la réplica, espera streaming y mide la reincorporación.
+- [x] **W8-10** Ejecutar y documentar **P08**: `scripts/failure-drill.sh replica-restart pg-replica-1` reinicia la réplica, espera streaming y mide la reincorporación.
   - Aceptación: el informe muestra `state = streaming` muestreado antes de la primera lectura reincorporada, el `replay_lag` del muestreo, la reincorporación en ≤60 s y el estado de los contenedores.
   - Depende: W8-1, W8-7
   - Spec: PRC (reincorporación condicionada), RPR, EE (fuente P08 y condición previa)
   - Verificación: `bash scripts/failure-drill.sh replica-restart pg-replica-1`
 
-- [ ] **W8-11** Consolidar la medición de tiempos de detección y recuperación de P03, P06 y P08, descomponiendo cada uno en intervalo de sondeo, timeout y propagación declarada.
+- [x] **W8-11** Consolidar la medición de tiempos de detección y recuperación de P03, P06 y P08, descomponiendo cada uno en intervalo de sondeo, timeout y propagación declarada.
   - Aceptación: cada informe recalcula el tiempo desde marcas de las muestras y coincide con la suma declarada; ninguna cifra queda como afirmación sin muestreo.
   - Depende: W8-4, W8-7, W8-10
   - Spec: EE (tiempos medidos y descompuestos), LB (ventana transitoria)
   - Verificación: `grep -l 'tiempo de detección' docs/informes/P03.md docs/informes/P06.md docs/informes/P08.md`
 
-- [ ] **W8-12** Crear `docs/informes/README.md` con la tabla de los nueve escenarios, su fuente primaria citada y su estado de ejecución.
+- [x] **W8-12** Crear `docs/informes/README.md` con la tabla de los nueve escenarios, su fuente primaria citada y su estado de ejecución.
   - Aceptación: la tabla enumera P01–P08 más P06b, cada uno con la fuente exigida y sin escenarios sustituidos por descripción teórica.
   - Depende: W8-2, W8-3, W8-4, W8-5, W8-6, W8-7, W8-8, W8-9, W8-10
   - Spec: EE (ejecución documentada, escenario faltante), TD
