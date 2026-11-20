@@ -72,7 +72,7 @@ Prioridad de aplicación: no aplicar dos slices a la vez sobre los mismos archiv
   - Spec: DE (entorno reproducible desde clon limpio, base del entregable)
   - Verificación: `git rev-parse --abbrev-ref HEAD`
 
-- [ ] **W0-2** Crear el repositorio remoto en GitHub y publicar `main` con seguimiento.
+- [x] **W0-2** Crear el repositorio remoto en GitHub y publicar `main` con seguimiento.
   - Aceptación: `origin/main` existe y apunta al commit raíz publicado.
   - Depende: W0-1
   - Spec: DE (reproducibilidad del clon), TD (repositorio público)

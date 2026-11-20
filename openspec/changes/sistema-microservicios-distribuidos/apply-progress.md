@@ -11,7 +11,7 @@ W0-10, cuando `strict_tdd: true` se activó con el primer test verde.
 | Tarea | Estado | Evidencia observada |
 | :-- | :-- | :-- |
 | W0-1 Inicializar Git con `main` y commit raíz | ✅ | `git rev-parse --abbrev-ref HEAD` → `main`; commit raíz `6e8a9e5` |
-| W0-2 Repositorio remoto en GitHub | ⛔ **No ejecutada (fuera de alcance)** | El usuario pidió un único PR al final y todavía no existe remoto. Prohibido configurar remoto, push o PR en esta fase. |
+| W0-2 Repositorio remoto en GitHub | ✅ | Repositorio público `https://github.com/DevTorres404/microservicios` creado y publicado; `git ls-remote --heads origin main` verificado exit 0. |
 | W0-3 `.gitignore` con `.env`, `target/`, `*.log`, IDE | ✅ | `git check-ignore -v .env` → `.gitignore:5:.env` |
 | W0-4 `.env.example` sin secretos | ✅ | `POSTGRES_PASSWORD=` presente en `.env.example`; `git ls-files --error-unmatch .env` → *did not match* |
 | W0-5 `.gitattributes` con `*.sh text eol=lf` | ✅ | línea 4 del archivo; `eureka-lease-probe.sh` tiene 0 pares CRLF |
