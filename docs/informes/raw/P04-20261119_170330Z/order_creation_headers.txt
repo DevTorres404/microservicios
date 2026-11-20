@@ -1,0 +1,9 @@
+HTTP/1.1 400 Bad Request
+transfer-encoding: chunked
+X-Correlation-Id: corr-p04-success-20261119_170330Z
+X-Correlation-Id: corr-p04-success-20261119_170330Z
+X-Service-Instance: servicio-pedidos:pedidos-2
+Content-Type: application/problem+json
+Date: Thu, 19 Nov 2026 17:03:31 GMT
+
+{"type":"urn:problem-type:validation-error","title":"Validation Error","status":400,"detail":"Request validation failed","instance":"/api/pedidos","code":"VALIDATION_ERROR","timestamp":"2026-11-19T17:03:31.055962191Z","correlationId":"corr-p04-success-20261119_170330Z","errors":{"customer":"Customer name must not be blank"}}

@@ -1,0 +1,54 @@
+{
+  "applications": {
+    "versions__delta": "1",
+    "apps__hashcode": "UP_4_",
+    "application": [
+      {
+        "name": "SERVICIO-PEDIDOS",
+        "instance": [
+          {
+            "instanceId": "servicio-pedidos:pedidos-1",
+            "hostName": "172.28.0.8",
+            "app": "SERVICIO-PEDIDOS",
+            "ipAddr": "172.28.0.8",
+            "status": "UP",
+            "port": { "$": 8082, "@enabled": "true" },
+            "leaseInfo": { "renewalIntervalInSecs": 5, "durationInSecs": 15 }
+          },
+          {
+            "instanceId": "servicio-pedidos:pedidos-2",
+            "hostName": "172.28.0.9",
+            "app": "SERVICIO-PEDIDOS",
+            "ipAddr": "172.28.0.9",
+            "status": "UP",
+            "port": { "$": 8082, "@enabled": "true" },
+            "leaseInfo": { "renewalIntervalInSecs": 5, "durationInSecs": 15 }
+          }
+        ]
+      },
+      {
+        "name": "SERVICIO-INVENTARIO",
+        "instance": [
+          {
+            "instanceId": "servicio-inventario:inventario-1",
+            "hostName": "172.28.0.6",
+            "app": "SERVICIO-INVENTARIO",
+            "ipAddr": "172.28.0.6",
+            "status": "UP",
+            "port": { "$": 8081, "@enabled": "true" },
+            "leaseInfo": { "renewalIntervalInSecs": 5, "durationInSecs": 15 }
+          },
+          {
+            "instanceId": "servicio-inventario:inventario-2",
+            "hostName": "172.28.0.7",
+            "app": "SERVICIO-INVENTARIO",
+            "ipAddr": "172.28.0.7",
+            "status": "UP",
+            "port": { "$": 8081, "@enabled": "true" },
+            "leaseInfo": { "renewalIntervalInSecs": 5, "durationInSecs": 15 }
+          }
+        ]
+      }
+    ]
+  }
+}

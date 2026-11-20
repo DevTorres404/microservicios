@@ -1,0 +1,30 @@
+### 6. Create order with lines
+POST http://localhost:8080/api/pedidos
+Content-Type: application/json
+Accept: application/json
+X-Correlation-Id: test-corr-order-create
+
+{
+  "customer": "Alice Smith",
+  "lines": [
+    {
+      "sku": "SKU-KEYBOARD",
+      "quantity": 2
+    }
+  ]
+}
+
+### 7. Get order by ID (critical read)
+GET http://localhost:8080/api/pedidos/1001
+Accept: application/json
+X-Correlation-Id: test-corr-order-get
+
+### 8. List and filter orders
+GET http://localhost:8080/api/pedidos?status=PENDIENTE
+Accept: application/json
+X-Correlation-Id: test-corr-order-list
+
+### 9. Cancel confirmed or pending order
+POST http://localhost:8080/api/pedidos/1001/cancelar
+Accept: application/json
+X-Correlation-Id: test-corr-order-cancel

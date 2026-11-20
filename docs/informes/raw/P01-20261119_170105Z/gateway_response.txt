@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+X-Correlation-Id: p01-test-20261119_170105Z
+X-Correlation-Id: p01-test-20261119_170105Z
+X-Service-Instance: servicio-inventario:inventario-1
+Content-Type: application/json
+Date: Thu, 19 Nov 2026 17:01:06 GMT
+
+[]

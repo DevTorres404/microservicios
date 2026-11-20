@@ -1,0 +1,9 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+X-Service-Instance: servicio-inventario:inventario-1
+X-Correlation-Id: p01-test-20261119_163130Z
+X-Data-Source: REPLICA_1
+Date: Thu, 19 Nov 2026 16:31:35 GMT
+Content-Length: 42
+
+[{"sku":"SKU-100","available":100,"price":10.5}]

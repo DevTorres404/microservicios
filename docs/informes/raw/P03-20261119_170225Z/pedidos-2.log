@@ -1,0 +1,60 @@
+2026-11-19T17:03:07.382Z  INFO 1 --- [servicio-pedidos] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-19T17:03:07.549Z  INFO 1 --- [servicio-pedidos] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 149 ms. Found 1 JPA repository interface.
+2026-11-19T17:03:07.951Z  INFO 1 --- [servicio-pedidos] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=e5fd5851-c9ab-3af9-9c19-69bcbaef4502
+2026-11-19T17:03:08.584Z  INFO 1 --- [servicio-pedidos] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-11-19T17:03:08.601Z  INFO 1 --- [servicio-pedidos] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-19T17:03:08.601Z  INFO 1 --- [servicio-pedidos] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-11-19T17:03:08.622Z  INFO 1 --- [servicio-pedidos] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-11-19T17:03:08.623Z  INFO 1 --- [servicio-pedidos] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3514 ms
+2026-11-19T17:03:08.948Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-primary - Starting...
+2026-11-19T17:03:08.960Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-primary - Start completed.
+2026-11-19T17:03:09.281Z  INFO 1 --- [servicio-pedidos] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://pg-primary:5432/pedidos_db?ApplicationName=pedidos-2 (PostgreSQL 16.14)
+2026-11-19T17:03:09.329Z  INFO 1 --- [servicio-pedidos] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 1 migration (execution time 00:00.024s)
+2026-11-19T17:03:09.340Z  INFO 1 --- [servicio-pedidos] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 1
+2026-11-19T17:03:09.343Z  INFO 1 --- [servicio-pedidos] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-11-19T17:03:09.355Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-replica-1 - Starting...
+2026-11-19T17:03:09.356Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-replica-1 - Start completed.
+2026-11-19T17:03:09.360Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-replica-2 - Starting...
+2026-11-19T17:03:09.360Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-replica-2 - Start completed.
+2026-11-19T17:03:09.470Z  INFO 1 --- [servicio-pedidos] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-19T17:03:09.538Z  INFO 1 --- [servicio-pedidos] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.53.Final
+2026-11-19T17:03:09.578Z  INFO 1 --- [servicio-pedidos] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-19T17:03:09.846Z  INFO 1 --- [servicio-pedidos] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-19T17:03:09.914Z  INFO 1 --- [servicio-pedidos] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy@1d1fd2aa']
+	Database driver: undefined/unknown
+	Database version: 16.14
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-19T17:03:11.013Z  INFO 1 --- [servicio-pedidos] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-19T17:03:11.054Z  INFO 1 --- [servicio-pedidos] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-19T17:03:11.391Z  INFO 1 --- [servicio-pedidos] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-19T17:03:12.060Z  INFO 1 --- [servicio-pedidos] [           main] o.s.c.openfeign.FeignClientFactoryBean   : For 'servicio-inventario' URL not provided. Will try picking an instance via load-balancing.
+2026-11-19T17:03:13.565Z  INFO 1 --- [servicio-pedidos] [           main] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestTemplate.
+2026-11-19T17:03:13.630Z  WARN 1 --- [servicio-pedidos] [           main] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-11-19T17:03:13.652Z  INFO 1 --- [servicio-pedidos] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'
+2026-11-19T17:03:13.733Z  INFO 1 --- [servicio-pedidos] [           main] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-11-19T17:03:13.768Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-11-19T17:03:13.771Z  INFO 1 --- [servicio-pedidos] [           main] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-11-19T17:03:13.784Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-11-19T17:03:14.373Z  INFO 1 --- [servicio-pedidos] [ca-health-probe] c.e.m.p.routing.ReplicaHealthRegistry    : Node REPLICA_1 probe succeeded, moved from DOWN to PROBING (1/2 consecutive)
+2026-11-19T17:03:14.378Z  INFO 1 --- [servicio-pedidos] [ca-health-probe] c.e.m.p.routing.ReplicaHealthRegistry    : Node REPLICA_2 probe succeeded, moved from DOWN to PROBING (1/2 consecutive)
+2026-11-19T17:03:14.408Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-11-19T17:03:14.411Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 5
+2026-11-19T17:03:14.416Z  INFO 1 --- [servicio-pedidos] [           main] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-11-19T17:03:14.431Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1795107794430 with initial instances count: 3
+2026-11-19T17:03:14.451Z  INFO 1 --- [servicio-pedidos] [           main] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application SERVICIO-PEDIDOS with eureka with status UP
+2026-11-19T17:03:14.452Z  INFO 1 --- [servicio-pedidos] [           main] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1795107794452, current=UP, previous=STARTING]
+2026-11-19T17:03:14.455Z  INFO 1 --- [servicio-pedidos] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICIO-PEDIDOS/servicio-pedidos:pedidos-2: registering service...
+2026-11-19T17:03:14.479Z  INFO 1 --- [servicio-pedidos] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8082 (http) with context path '/'
+2026-11-19T17:03:14.481Z  INFO 1 --- [servicio-pedidos] [           main] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8082
+2026-11-19T17:03:14.499Z  INFO 1 --- [servicio-pedidos] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_SERVICIO-PEDIDOS/servicio-pedidos:pedidos-2 - registration status: 204
+2026-11-19T17:03:14.513Z  INFO 1 --- [servicio-pedidos] [           main] c.e.m.pedidos.PedidosApplication         : Started PedidosApplication in 10.462 seconds (process running for 11.439)

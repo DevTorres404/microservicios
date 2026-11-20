@@ -1,0 +1,100 @@
+2026-11-19 17:04:55.895 UTC [51] LOG:  statement: 
+2026-11-19 17:04:56.929 UTC [37] LOG:  statement: 
+2026-11-19 17:04:56.930 UTC [37] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:56.931 UTC [37] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:56.959 UTC [49] LOG:  statement: 
+2026-11-19 17:04:56.959 UTC [49] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:56.960 UTC [49] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:57.028 UTC [39] LOG:  statement: 
+2026-11-19 17:04:57.029 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:57.030 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:57.414 UTC [37] LOG:  statement: 
+2026-11-19 17:04:57.414 UTC [37] LOG:  statement: 
+2026-11-19 17:04:57.415 UTC [37] LOG:  statement: 
+2026-11-19 17:04:57.902 UTC [39] LOG:  statement: 
+2026-11-19 17:04:57.902 UTC [39] LOG:  statement: 
+2026-11-19 17:04:57.902 UTC [39] LOG:  statement: 
+2026-11-19 17:04:57.904 UTC [39] LOG:  statement: 
+2026-11-19 17:04:59.656 UTC [49] LOG:  statement: 
+2026-11-19 17:04:59.656 UTC [49] LOG:  statement: 
+2026-11-19 17:04:59.657 UTC [49] LOG:  statement: 
+2026-11-19 17:04:59.658 UTC [49] LOG:  statement: 
+2026-11-19 17:05:00.467 UTC [51] LOG:  statement: 
+2026-11-19 17:05:00.468 UTC [51] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:00.469 UTC [51] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:00.947 UTC [51] LOG:  statement: 
+2026-11-19 17:05:00.948 UTC [51] LOG:  statement: 
+2026-11-19 17:05:00.950 UTC [51] LOG:  statement: 
+2026-11-19 17:05:01.934 UTC [37] LOG:  statement: 
+2026-11-19 17:05:01.935 UTC [37] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:01.935 UTC [37] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:01.963 UTC [49] LOG:  statement: 
+2026-11-19 17:05:01.963 UTC [49] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:01.964 UTC [49] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:02.033 UTC [39] LOG:  statement: 
+2026-11-19 17:05:02.033 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:02.033 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:02.468 UTC [37] LOG:  statement: 
+2026-11-19 17:05:02.469 UTC [37] LOG:  statement: 
+2026-11-19 17:05:02.470 UTC [37] LOG:  statement: 
+2026-11-19 17:05:02.472 UTC [37] LOG:  statement: 
+2026-11-19 17:05:02.952 UTC [39] LOG:  statement: 
+2026-11-19 17:05:02.953 UTC [39] LOG:  statement: 
+2026-11-19 17:05:02.953 UTC [39] LOG:  statement: 
+2026-11-19 17:05:02.955 UTC [39] LOG:  statement: 
+2026-11-19 17:05:04.739 UTC [49] LOG:  statement: 
+2026-11-19 17:05:04.739 UTC [49] LOG:  statement: 
+2026-11-19 17:05:04.741 UTC [49] LOG:  statement: 
+2026-11-19 17:05:04.742 UTC [49] LOG:  statement: 
+2026-11-19 17:05:05.472 UTC [51] LOG:  statement: 
+2026-11-19 17:05:05.473 UTC [51] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:05.474 UTC [51] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:06.034 UTC [51] LOG:  statement: 
+2026-11-19 17:05:06.035 UTC [51] LOG:  statement: 
+2026-11-19 17:05:06.037 UTC [51] LOG:  statement: 
+2026-11-19 17:05:06.038 UTC [51] LOG:  statement: 
+2026-11-19 17:05:06.939 UTC [37] LOG:  statement: 
+2026-11-19 17:05:06.940 UTC [37] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:06.941 UTC [37] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:06.965 UTC [49] LOG:  statement: 
+2026-11-19 17:05:06.966 UTC [49] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:06.967 UTC [49] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:07.037 UTC [39] LOG:  statement: 
+2026-11-19 17:05:07.038 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:07.039 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:07.556 UTC [37] LOG:  statement: 
+2026-11-19 17:05:07.557 UTC [37] LOG:  statement: 
+2026-11-19 17:05:07.558 UTC [37] LOG:  statement: 
+2026-11-19 17:05:07.559 UTC [37] LOG:  statement: 
+2026-11-19 17:05:08.029 UTC [39] LOG:  statement: 
+2026-11-19 17:05:08.030 UTC [39] LOG:  statement: 
+2026-11-19 17:05:08.030 UTC [39] LOG:  statement: 
+2026-11-19 17:05:08.031 UTC [39] LOG:  statement: 
+2026-11-19 17:05:09.362 UTC [37] LOG:  statement: 
+2026-11-19 17:05:09.363 UTC [37] LOG:  statement: BEGIN READ ONLY
+2026-11-19 17:05:09.364 UTC [37] LOG:  execute <unnamed>: select si1_0.sku,si1_0.available,si1_0.unit_price,si1_0.updated_at from stock si1_0 order by si1_0.sku
+2026-11-19 17:05:09.366 UTC [37] LOG:  execute S_1: COMMIT
+2026-11-19 17:05:09.816 UTC [39] LOG:  statement: 
+2026-11-19 17:05:09.817 UTC [39] LOG:  statement: BEGIN READ ONLY
+2026-11-19 17:05:09.818 UTC [39] LOG:  execute <unnamed>: select si1_0.sku,si1_0.available,si1_0.unit_price,si1_0.updated_at from stock si1_0 order by si1_0.sku
+2026-11-19 17:05:09.820 UTC [39] LOG:  execute S_1: COMMIT
+2026-11-19 17:05:09.820 UTC [49] LOG:  statement: 
+2026-11-19 17:05:09.821 UTC [49] LOG:  statement: 
+2026-11-19 17:05:09.822 UTC [49] LOG:  statement: 
+2026-11-19 17:05:09.823 UTC [49] LOG:  statement: 
+2026-11-19 17:05:10.478 UTC [51] LOG:  statement: 
+2026-11-19 17:05:10.479 UTC [51] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:10.480 UTC [51] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:11.110 UTC [52] LOG:  statement: 
+2026-11-19 17:05:11.110 UTC [52] LOG:  statement: 
+2026-11-19 17:05:11.112 UTC [52] LOG:  statement: 
+2026-11-19 17:05:11.114 UTC [52] LOG:  statement: 
+2026-11-19 17:05:11.945 UTC [37] LOG:  statement: 
+2026-11-19 17:05:11.945 UTC [37] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:11.946 UTC [37] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:11.969 UTC [49] LOG:  statement: 
+2026-11-19 17:05:11.970 UTC [49] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:11.971 UTC [49] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:05:12.042 UTC [39] LOG:  statement: 
+2026-11-19 17:05:12.042 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:05:12.043 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver

@@ -1,0 +1,3 @@
+Date: Thu, 19 Nov 2026 17:03:36 GMT
+
+{"type":"urn:problem-type:validation-error","title":"Validation Error","status":400,"detail":"Request validation failed","instance":"/api/pedidos","code":"VALIDATION_ERROR","timestamp":"2026-11-19T17:03:36.901054062Z","correlationId":"corr-p04-fail-20261119_170330Z","errors":{"customer":"Customer name must not be blank"}}

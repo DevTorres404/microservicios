@@ -1,0 +1,3 @@
+=== TIMESTAMP: 20261119_163903Z ===
+Error response from daemon: container 2ecb276685bc315a2283dac2d3a9ce6e8c997b8d8af9e014a8a42c3ea3f22ff3 is not running
+psql failed on pg-primary
