@@ -1,0 +1,60 @@
+2026-11-19T16:48:55.633Z  INFO 1 --- [servicio-pedidos] [           main] c.e.m.pedidos.PedidosApplication         : Starting PedidosApplication v1.0.0-SNAPSHOT using Java 21.0.12 with PID 1 (/app/app.jar started by app in /app)
+2026-11-19T16:48:55.637Z  INFO 1 --- [servicio-pedidos] [           main] c.e.m.pedidos.PedidosApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-11-19T16:48:57.407Z  INFO 1 --- [servicio-pedidos] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-19T16:48:57.642Z  INFO 1 --- [servicio-pedidos] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 211 ms. Found 1 JPA repository interface.
+2026-11-19T16:48:58.137Z  INFO 1 --- [servicio-pedidos] [           main] o.s.cloud.context.scope.GenericScope     : BeanFactory id=e5fd5851-c9ab-3af9-9c19-69bcbaef4502
+2026-11-19T16:48:59.049Z  INFO 1 --- [servicio-pedidos] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-11-19T16:48:59.071Z  INFO 1 --- [servicio-pedidos] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-19T16:48:59.072Z  INFO 1 --- [servicio-pedidos] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.55]
+2026-11-19T16:48:59.109Z  INFO 1 --- [servicio-pedidos] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-11-19T16:48:59.110Z  INFO 1 --- [servicio-pedidos] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3414 ms
+2026-11-19T16:48:59.648Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-primary - Starting...
+2026-11-19T16:48:59.668Z  INFO 1 --- [servicio-pedidos] [           main] com.zaxxer.hikari.HikariDataSource       : servicio-pedidos-primary - Start completed.
+2026-11-19T16:49:01.925Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+Retrying in 1 sec...
+2026-11-19T16:49:04.926Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 2 sec...
+2026-11-19T16:49:08.927Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 4 sec...
+2026-11-19T16:49:14.928Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 8 sec...
+2026-11-19T16:49:24.927Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 16 sec...
+2026-11-19T16:49:42.928Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 32 sec...
+2026-11-19T16:50:04.980Z  WARN 1 --- [servicio-pedidos] [onnection-adder] com.zaxxer.hikari.pool.PoolBase          : servicio-pedidos-primary - Pool is empty, failed to create/setup connection (6b5af436-0624-40d3-a1a0-ec6ad4f4ce68)
+
+org.postgresql.util.PSQLException: The connection attempt failed.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:437) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:52) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:290) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.Driver.makeConnection(Driver.java:448) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.Driver.connect(Driver.java:298) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:144) ~[HikariCP-6.3.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:370) ~[HikariCP-6.3.3.jar!/:na]
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:207) ~[HikariCP-6.3.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:488) ~[HikariCP-6.3.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:752) ~[HikariCP-6.3.3.jar!/:na]
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:731) ~[HikariCP-6.3.3.jar!/:na]
+	at java.base/java.util.concurrent.FutureTask.run(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source) ~[na:na]
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source) ~[na:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+Caused by: java.net.UnknownHostException: pg-primary
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.SocksSocketImpl.connect(Unknown Source) ~[na:na]
+	at java.base/java.net.Socket.connect(Unknown Source) ~[na:na]
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:271) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.core.PGStream.<init>(PGStream.java:132) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:219) ~[postgresql-42.7.11.jar!/:42.7.11]
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:365) ~[postgresql-42.7.11.jar!/:42.7.11]
+	... 14 common frames omitted
+
+2026-11-19T16:50:16.928Z  WARN 1 --- [servicio-pedidos] [           main] o.flywaydb.core.internal.jdbc.JdbcUtils  : Connection error: servicio-pedidos-primary - Connection is not available, request timed out after 2000ms (total=0, active=0, idle=0, waiting=0)
+(Caused by pg-primary)
+Retrying in 64 sec...

@@ -1,33 +1,66 @@
-# Local AI runtime state
-.atl/
+# ==============================================================================
+# Git Ignore Configuration
+# ==============================================================================
 
-# Secrets: only .env.example is versioned
+# Secrets and local environment (only .env.example is versioned)
 .env
 .env.*
 !.env.example
+.pgpass*
+*.key
+*.pem
+*.pfx
+*.p12
+*.cert
+*.crt
 
-# Maven build output
+# Maven build outputs and compiled classes
 target/
 !.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+.flattened-pom.xml
 
-# Logs
+# JVM crash logs and heap dumps
+*.hprof
+hs_err_pid*.log
+replay_pid*.log
+
+# General logs (except curated experimental evidence under docs/informes/raw/)
 *.log
 logs/
+!docs/informes/raw/**
 
-# IDE and editor state
+# IDEs and Editors
 .idea/
 *.iml
 *.ipr
 *.iws
 .vscode/
+*.code-workspace
 .settings/
 .project
 .classpath
+nbproject/private/
+*.swp
+*.swo
+*~
 
-# OS noise
+# Operating System noise
 .DS_Store
 Thumbs.db
+ehthumbs.db
 desktop.ini
+$RECYCLE.BIN/
 
-# Compiled classes
-*.class
+# Local AI runtime and editor agent state
+.atl/
+.gemini/
+.claude/
+.cursor/
+
+# Local Docker overrides
+docker-compose.override.yml
+*.pid

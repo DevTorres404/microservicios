@@ -1,0 +1,32 @@
+PGDATA already populated. Starting replica in standby mode...
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2026-11-19 17:03:59.453 UTC [1] LOG:  starting PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-11-19 17:03:59.454 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-11-19 17:03:59.454 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-11-19 17:03:59.463 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-19 17:03:59.475 UTC [35] LOG:  database system was shut down in recovery at 2026-11-19 17:03:52 UTC
+2026-11-19 17:03:59.475 UTC [35] LOG:  entering standby mode
+2026-11-19 17:03:59.484 UTC [35] LOG:  consistent recovery state reached at 0/60D3EE8
+2026-11-19 17:03:59.484 UTC [35] LOG:  invalid record length at 0/60D3EE8: expected at least 24, got 0
+2026-11-19 17:03:59.484 UTC [1] LOG:  database system is ready to accept read-only connections
+2026-11-19 17:03:59.503 UTC [36] LOG:  started streaming WAL from primary at 0/6000000 on timeline 1
+2026-11-19 17:04:00.017 UTC [37] LOG:  statement: SET application_name = 'inventario-1'
+2026-11-19 17:04:00.020 UTC [37] LOG:  statement: 
+2026-11-19 17:04:00.060 UTC [38] LOG:  statement: SET application_name = 'inventario-1'
+2026-11-19 17:04:00.107 UTC [39] LOG:  statement: SET application_name = 'inventario-2'
+2026-11-19 17:04:00.111 UTC [39] LOG:  statement: 
+2026-11-19 17:04:00.148 UTC [40] LOG:  statement: SET application_name = 'inventario-2'
+2026-11-19 17:04:01.509 UTC [37] LOG:  statement: 
+2026-11-19 17:04:01.509 UTC [37] LOG:  statement: 
+2026-11-19 17:04:01.510 UTC [37] LOG:  statement: 
+2026-11-19 17:04:01.514 UTC [37] LOG:  statement: 
+2026-11-19 17:04:01.877 UTC [37] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:01.879 UTC [37] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:01.933 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.933 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.934 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.936 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.970 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:01.972 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver

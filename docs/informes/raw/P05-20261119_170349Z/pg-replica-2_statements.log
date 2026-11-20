@@ -1,0 +1,52 @@
+PGDATA already populated. Starting replica in standby mode...
+
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2026-11-19 17:03:59.787 UTC [1] LOG:  starting PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-11-19 17:03:59.787 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-11-19 17:03:59.787 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-11-19 17:03:59.794 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-19 17:03:59.803 UTC [36] LOG:  database system was shut down in recovery at 2026-11-19 17:03:52 UTC
+2026-11-19 17:03:59.803 UTC [36] LOG:  entering standby mode
+2026-11-19 17:03:59.810 UTC [36] LOG:  consistent recovery state reached at 0/60D3EE8
+2026-11-19 17:03:59.810 UTC [36] LOG:  invalid record length at 0/60D3EE8: expected at least 24, got 0
+2026-11-19 17:03:59.811 UTC [1] LOG:  database system is ready to accept read-only connections
+2026-11-19 17:03:59.812 UTC [37] FATAL:  the database system is starting up
+2026-11-19 17:03:59.825 UTC [38] LOG:  started streaming WAL from primary at 0/6000000 on timeline 1
+2026-11-19 17:03:59.911 UTC [39] LOG:  statement: SET application_name = 'pedidos-1'
+2026-11-19 17:03:59.914 UTC [39] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:03:59.916 UTC [39] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:03:59.953 UTC [40] LOG:  statement: SET application_name = 'pedidos-1'
+2026-11-19 17:04:00.017 UTC [41] LOG:  statement: SET application_name = 'inventario-1'
+2026-11-19 17:04:00.018 UTC [41] LOG:  statement: 
+2026-11-19 17:04:00.021 UTC [41] LOG:  statement: 
+2026-11-19 17:04:00.059 UTC [42] LOG:  statement: SET application_name = 'inventario-1'
+2026-11-19 17:04:00.100 UTC [43] LOG:  statement: SET application_name = 'pedidos-2'
+2026-11-19 17:04:00.108 UTC [44] LOG:  statement: SET application_name = 'inventario-2'
+2026-11-19 17:04:00.109 UTC [44] LOG:  statement: 
+2026-11-19 17:04:00.111 UTC [44] LOG:  statement: 
+2026-11-19 17:04:00.142 UTC [45] LOG:  statement: SET application_name = 'pedidos-2'
+2026-11-19 17:04:00.148 UTC [46] LOG:  statement: SET application_name = 'inventario-2'
+2026-11-19 17:04:01.507 UTC [41] LOG:  statement: 
+2026-11-19 17:04:01.508 UTC [41] LOG:  statement: 
+2026-11-19 17:04:01.512 UTC [41] LOG:  statement: 
+2026-11-19 17:04:01.515 UTC [41] LOG:  statement: 
+2026-11-19 17:04:01.742 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.742 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.766 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.767 UTC [39] LOG:  statement: 
+2026-11-19 17:04:01.873 UTC [41] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:01.875 UTC [41] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:01.932 UTC [44] LOG:  statement: 
+2026-11-19 17:04:01.932 UTC [44] LOG:  statement: 
+2026-11-19 17:04:01.934 UTC [44] LOG:  statement: 
+2026-11-19 17:04:01.936 UTC [44] LOG:  statement: 
+2026-11-19 17:04:01.967 UTC [44] LOG:  execute <unnamed>: SELECT 1
+2026-11-19 17:04:01.969 UTC [44] LOG:  execute <unnamed>: SELECT status FROM pg_stat_wal_receiver
+2026-11-19 17:04:02.097 UTC [43] LOG:  statement: 
+2026-11-19 17:04:02.098 UTC [43] LOG:  statement: 
+2026-11-19 17:04:03.769 UTC [39] LOG:  statement: 
+2026-11-19 17:04:03.770 UTC [39] LOG:  statement: 
+2026-11-19 17:04:04.125 UTC [43] LOG:  statement: 
+2026-11-19 17:04:04.125 UTC [43] LOG:  statement: 
+2026-11-19 17:04:04.126 UTC [43] LOG:  statement: 
