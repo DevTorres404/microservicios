@@ -64,3 +64,6 @@ $RECYCLE.BIN/
 # Local Docker overrides
 docker-compose.override.yml
 *.pid
+
+# Video presentation scripts and draft rehearsals
+docs/guion*
