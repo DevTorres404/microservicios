@@ -1,0 +1,312 @@
+% ==========================================================
+% UNIVERSIDAD ESTATAL PENÍNSULA DE SANTA ELENA
+% FACULTAD DE SISTEMAS Y TELECOMUNICACIONES
+% CARRERA DE INGENIERÍA DE SOFTWARE
+% ASIGNATURA: FRAMEWORK PROGRAMACIÓN WEB
+% ==========================================================
+% Informe Técnico: Cuadro Comparativo y Evidencias Swagger UI
+% Formato: Una captura por página
+% ==========================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ==========================================================
+% PAQUETES
+% ==========================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[top=2.2cm,bottom=2.2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage[most]{tcolorbox}
+
+% ==========================================================
+% PALETA FORMAL EN NEGRO
+% ==========================================================
+\definecolor{formalblack}{HTML}{111111}
+\definecolor{pureblack}{HTML}{000000}
+\definecolor{headerdark}{HTML}{1E293B}
+\definecolor{rowgray}{HTML}{F8FAFC}
+\definecolor{lightbg}{HTML}{F8FAFC}
+
+% ==========================================================
+% HIPERENLACES
+% ==========================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=pureblack,
+    urlcolor=pureblack,
+    citecolor=pureblack,
+    pdfauthor={Damian Torres - UPSE},
+    pdftitle={Informe Tecnico: Cuadro Comparativo y Pruebas en /docs}
+}
+
+% ==========================================================
+% ESTILO DE SECCIONES FORMAL EN NEGRO
+% ==========================================================
+\titleformat{\section}
+{\color{formalblack}\Large\bfseries}
+{\thesection.}
+{0.45em}
+{}
+[{\vspace{1pt}\color{formalblack}\titlerule[1.0pt]}]
+
+\titlespacing*{\section}{0pt}{10pt}{10pt}
+
+% ==========================================================
+% ENCABEZADOS Y PIES DE PÁGINA FORMALES
+% ==========================================================
+\pagestyle{fancy}
+\setlength{\headheight}{14pt}
+\fancyhf{}
+\lhead{\small\textbf{\textcolor{formalblack}{UPSE}} \textcolor{gray}{$\,\vert\,$} \textcolor{formalblack}{Framework Programación Web}}
+\rhead{\small\textcolor{formalblack}{SaaS API Multitenant} \textcolor{gray}{$\,\vert\,$} \textbf{\textcolor{formalblack}{Damián Torres}}}
+\cfoot{\small\textcolor{formalblack}{Página \thepage\ de \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+% ==========================================================
+% CAJAS Y TABLAS
+% ==========================================================
+\tcbset{
+    formalbox/.style={
+        enhanced,
+        colback=lightbg,
+        colframe=formalblack,
+        boxrule=0.6pt,
+        leftrule=3.5pt,
+        arc=1mm,
+        left=10pt,
+        right=10pt,
+        top=8pt,
+        bottom=8pt,
+        boxsep=0pt
+    }
+}
+
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\captionsetup{
+    font={small,rm},
+    labelfont={bf,color=formalblack},
+    textfont={color=formalblack},
+    skip=6pt
+}
+
+\graphicspath{{docs_screenshots/}{./}}
+
+% ==========================================================
+% DOCUMENTO
+% ==========================================================
+\begin{document}
+
+% ==========================================================
+% PÁGINA 1: PORTADA INSTITUCIONAL FORMAL
+% ==========================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{0.8cm}
+
+\IfFileExists{upse.png}{
+    \includegraphics[width=3.8cm]{upse.png}\\[0.6cm]
+}{
+    {\Large \textbf{UPSE}}\\[0.6cm]
+}
+
+{\large \textbf{\textcolor{formalblack}{UNIVERSIDAD ESTATAL PEN\'{I}NSULA DE SANTA ELENA}}}\\[0.2cm]
+{\normalsize \textbf{Facultad de Sistemas y Telecomunicaciones}}\\[0.06cm]
+{\normalsize \textbf{Carrera de Ingenier\'{i}a de Software}}
+
+\vspace{0.8cm}
+\noindent\rule{\textwidth}{1.0pt}
+\vspace{0.25cm}
+
+{\normalsize \textbf{FRAMEWORK PROGRAMACI\'{O}N WEB}}
+
+\vspace{0.25cm}
+\noindent\rule{\textwidth}{1.0pt}
+\vspace{0.8cm}
+
+{\Large \textbf{Informe T\'{e}cnico: Cuadro Comparativo Arquitect\'{o}nico y Validaci\'{o}n Pr\'{a}ctica de Endpoints en FastAPI}\par}
+\vspace{0.45cm}
+{\large \textit{Desarrollo de Endpoints Multitenant, Validaci\'{o}n Pydantic y Pruebas en Swagger UI (\texttt{/docs})}}
+
+\vfill
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\textbf{Estudiante:}            & \textbf{Dami\'{a}n Jes\'{u}s Torres Cadena} \\
+                                & \texttt{damian.torrescadena0563@upse.edu.ec} \\[0.25cm]
+\textbf{Docente:}               & \textbf{Ing. Carlos Mu\~{n}oz} \\[0.2cm]
+\textbf{Asignatura:}            & Framework Programaci\'{o}n Web \\[0.2cm]
+\textbf{Per\'{i}odo acad\'{e}mico:} & 2026--2 \\[0.2cm]
+\textbf{Fecha de presentaci\'{o}n:} & Noviembre de 2026 \\
+\end{tabularx}
+
+\vspace{0.8cm}
+
+\end{titlepage}
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==========================================================
+% PÁGINA 2: CUADRO COMPARATIVO PROPIO
+% ==========================================================
+\section{Cuadro Comparativo: MVC Clásico vs. MVT (Django) vs. API-First (FastAPI)}
+
+A continuaci\'{o}n se presenta la comparativa arquitect\'{o}nica requerida, contrastando los tres modelos de desarrollo web en funci\'{o}n de sus dimensiones estructurales, desacoplamiento de capas y aislamiento multitenant:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.0cm}Y L{3.5cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{Dimensi\'{o}n}} & 
+\textcolor{white}{\textbf{MVC Cl\'{a}sico (Spring/Laravel)}} & 
+\textcolor{white}{\textbf{MVT (Django)}} & 
+\textcolor{white}{\textbf{API-First (FastAPI)}} \\
+\midrule[0.8pt]
+\textbf{Controlador y Despacho} & 
+El \textbf{Controller} intercepta HTTP, invoca el Modelo y selecciona la Vista para renderizado. & 
+La \textbf{View} act\'{u}a de controlador; consulta ORM y despacha contexto a plantillas. & 
+Los \textbf{Path Operations} act\'{u}an como controladores desacoplados con serializaci\'{o}n JSON directa. \\
+\rowcolor{rowgray}
+\textbf{Capa de Vista (UI)} & 
+\textbf{View}: Plantillas procesadas en servidor (JSP/Blade). Acoplamiento visual fuerte. & 
+\textbf{Template}: HTML con DTL/Jinja. Renderizado del lado del servidor (SSR monol\'{i}tico). & 
+\textbf{Headless / Desacoplada}: Frontend aut\'{o}nomo (React, Flutter, IoT) que consume JSON puro. \\
+\textbf{Validaci\'{o}n y Contrato} & 
+Formularios backend espec\'{i}ficos o anotaciones manuales dependientes del framework. & 
+\textbf{Forms / ModelForms}: Ligados r\'{i}gidamente al ORM y a la sesi\'{o}n del navegador. & 
+\textbf{Pydantic Schemas}: Validaci\'{o}n \textit{fail-fast} en frontera, tipado est\'{a}tico y contrato OpenAPI autogenerado. \\
+\rowcolor{rowgray}
+\textbf{Concurrencia / Runtime} & 
+Tradicionalmente s\'{i}ncrono; modelo \textit{thread-per-request} (bloqueante en I/O). & 
+Predominantemente s\'{i}ncrono sobre WSGI (soporte ASGI incremental no nativo). & 
+\textbf{As\'{i}ncrono nativo (ASGI)}: Bucle de eventos no bloqueante optimizado para I/O concurrente. \\
+\textbf{Aislamiento Multitenant} & 
+Resuelto por middlewares, filtros de servlet o tenancy a nivel de esquema en base de datos. & 
+Depende de extensiones (\texttt{django-tenants}) o filtrado manual en QuerySets. & 
+\textbf{Segmentaci\'{o}n expl\'{i}cita por ruta (\texttt{/api/\{tenant\_id\}})} y \textit{scoped querying} directo. \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Cuadro comparativo propio entre MVC Cl\'{a}sico, MVT y API-First.}
+\label{tab:comparativa}
+\end{table}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Conclusi\'{o}n Arquitect\'{o}nica Breve:}
+La arquitectura \textbf{API-First} adoptada con FastAPI desacopla totalmente la l\'{o}gica del servicio respecto a la capa de presentaci\'{o}n visual. Pydantic act\'{u}a como barrera perimetral tipada garantizando la integridad de datos antes de que ingresen a la capa l\'{o}gica, mientras que el direccionamiento por tenant provee aislamiento estricto de recursos.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% PÁGINA 3: CAPTURA 1 - VISTA GENERAL EN SWAGGER UI
+% ==========================================================
+\section{Evidencia 1: Vista General de Endpoints en Swagger UI (\texttt{/docs})}
+
+Exposici\'{o}n interactiva completa de los contratos OpenAPI en Swagger UI. Se aprecian las operaciones implementadas para la soluci\'{o}n SaaS multitienda (\texttt{GET}, \texttt{POST}, \texttt{PUT} y \texttt{DELETE}) junto con los esquemas tipados de Pydantic:
+
+\vspace{0.4cm}
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0.6pt}\setlength{\fboxsep}{0pt}%
+\fbox{\includegraphics[width=0.96\textwidth]{01_swagger_overview.png}}
+\caption{Vista general de las operaciones RESTful y esquemas OpenAPI en \texttt{/docs}.}
+\label{fig:swagger-overview}
+\end{figure}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Detalle T\'{e}cnico:} La especificaci\'{o}n OpenAPI 3.1 autogenerada refleja con precisi\'{o}n los par\'{a}metros de ruta requeridos (\texttt{tenant\_id}, \texttt{pedido\_id}) y los esquemas de entrada para registrar y actualizar pedidos.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% PÁGINA 4: CAPTURA 2 - VALIDACIÓN PYDANTIC (HTTP 422)
+% ==========================================================
+\section{Evidencia 2: Validación Pydantic con HTTP 422}
+
+Verificaci\'{o}n de la regla de validaci\'{o}n defensiva implementada en \texttt{PedidoEntrada} con \texttt{Field(..., gt=0)}. Al enviar una orden con $\text{cantidad} = 0$ y $\text{total} = -25.0$, el motor intercepta la solicitud y devuelve autom\'{a}ticamente \textbf{HTTP 422 Unprocessable Content}:
+
+\vspace{0.4cm}
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0.6pt}\setlength{\fboxsep}{0pt}%
+\fbox{\includegraphics[width=0.96\textwidth]{02_pydantic_validation_422.png}}
+\caption{Respuesta HTTP 422 impidiendo registrar pedidos con cantidad $\le 0$ o total $\le 0$.}
+\label{fig:pydantic-422}
+\end{figure}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Detalle T\'{e}cnico:} El cuerpo de respuesta JSON expone detalladamente cada transgresi\'{o}n (\texttt{"type": "greater\_than"}, \texttt{"loc": ["body", "cantidad"]}, \texttt{"msg": "Input should be greater than 0"}), demostrando validaci\'{o}n estricta en frontera.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% PÁGINA 5: CAPTURA 3 - ENDPOINT PUT (CAMBIO DE ESTADO)
+% ==========================================================
+\section{Evidencia 3: Endpoint \texttt{PUT} --- Cambio de Estado de Pedido}
+
+Ejecuci\'{o}n del endpoint \texttt{PUT /api/\{tenant\_id\}/pedidos/\{pedido\_id\}/estado}. Se procesa la actualizaci\'{o}n del pedido con $\text{id} = 2$ en \texttt{tienda\_norte}, conmutando su estado a \texttt{"Entregado"} con respuesta exitosa \textbf{HTTP 200 OK}:
+
+\vspace{0.4cm}
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0.6pt}\setlength{\fboxsep}{0pt}%
+\fbox{\includegraphics[width=0.96\textwidth]{03_put_estado_200.png}}
+\caption{Ejecuci\'{o}n exitosa del endpoint PUT para cambio de estado retornando HTTP 200.}
+\label{fig:put-estado}
+\end{figure}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Detalle T\'{e}cnico:} La mutaci\'{o}n se realiza de manera segura y at\'{o}mica; el servicio valida la existencia previa del tenant y asegura que el pedido pertenezca exclusivamente a la tienda indicada antes de alterar su estado.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% PÁGINA 6: CAPTURA 4 - ENDPOINT DELETE CON AISLAMIENTO
+% ==========================================================
+\section{Evidencia 4: Endpoint \texttt{DELETE} --- Aislamiento Multitenant}
+
+Ejecuci\'{o}n del endpoint \texttt{DELETE /api/\{tenant\_id\}/pedidos/\{pedido\_id\}}. Se elimina el pedido con $\text{id} = 1$ perteneciente a \texttt{tienda\_norte} con respuesta \textbf{HTTP 200 OK}, garantizando aislamiento entre tiendas:
+
+\vspace{0.4cm}
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0.6pt}\setlength{\fboxsep}{0pt}%
+\fbox{\includegraphics[width=0.96\textwidth]{04_delete_pedido_200.png}}
+\caption{Eliminaci\'{o}n de pedido confirmada con HTTP 200 y aislamiento verificado entre tiendas.}
+\label{fig:delete-aislamiento}
+\end{figure}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Garant\'{i}a de Aislamiento Multitenant:} La eliminaci\'{o}n se acota \'{u}nicamente a la partici\'{o}n del tenant especificado en la URL. El pedido con $\text{id} = 1$ perteneciente a \texttt{tienda\_sur} permaneci\'{o} \'{i}ntegro e inalterado en memoria, evitando cualquier interferencia cruzada.
+\end{tcolorbox}
+
+\end{document}

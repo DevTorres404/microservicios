@@ -202,4 +202,4 @@ El directorio `requests/` contiene una colección completa de solicitudes en for
 - **Registro de decisiones de arquitectura (ADR-01 a ADR-10)**: [docs/decisiones.md](docs/decisiones.md)
 - **Índice maestro de evidencia experimental (P01 a P08 y P06b)**: [docs/informes/README.md](docs/informes/README.md)
 - **Guion técnico del video demostrativo**: [docs/guion-video.md](docs/guion-video.md)
-- **Video demostrativo**: Enlace al video explicativo: https://youtu.be/demo-microservicios-distribuidos (Duración: 4 min).
+- **Video demostrativo**: Enlace al video explicativo: https://youtu.be/Gyf0GFP-oaI (Duración: 4 min).

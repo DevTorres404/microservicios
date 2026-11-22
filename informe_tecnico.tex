@@ -1,0 +1,485 @@
+% ==========================================================
+% UNIVERSIDAD ESTATAL PENÍNSULA DE SANTA ELENA
+% FACULTAD DE SISTEMAS Y TELECOMUNICACIONES
+% CARRERA DE INGENIERÍA DE SOFTWARE
+% ASIGNATURA: APLICACIONES DISTRIBUIDAS
+% ==========================================================
+% Informe Técnico: Sistema de Microservicios Distribuidos con
+% Descubrimiento Dinámico, Balanceo de Carga y Persistencia Replicada
+% ==========================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ==========================================================
+% PAQUETES
+% ==========================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[top=2.2cm,bottom=2.2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{titlesec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage[most]{tcolorbox}
+
+% ==========================================================
+% PALETA FORMAL EN NEGRO
+% ==========================================================
+\definecolor{formalblack}{HTML}{111111}
+\definecolor{pureblack}{HTML}{000000}
+\definecolor{headerdark}{HTML}{1E293B}
+\definecolor{rowgray}{HTML}{F8FAFC}
+\definecolor{lightbg}{HTML}{F8FAFC}
+
+% ==========================================================
+% HIPERENLACES
+% ==========================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=pureblack,
+    urlcolor=pureblack,
+    citecolor=pureblack,
+    pdfauthor={Damián Torres, Melanie Tomalá, Jean Cedeño - UPSE},
+    pdftitle={Informe Técnico: Microservicios con Descubrimiento, Balanceo y Persistencia Replicada}
+}
+
+% ==========================================================
+% ESTILO DE SECCIONES FORMAL EN NEGRO
+% ==========================================================
+\titleformat{\section}
+{\color{formalblack}\Large\bfseries}
+{\thesection.}
+{0.45em}
+{}
+[{\vspace{1pt}\color{formalblack}\titlerule[1.0pt]}]
+
+\titleformat{\subsection}
+{\color{formalblack}\large\bfseries}
+{\thesubsection.}
+{0.4em}
+{}
+
+\titlespacing*{\section}{0pt}{12pt}{8pt}
+\titlespacing*{\subsection}{0pt}{10pt}{6pt}
+
+% ==========================================================
+% ENCABEZADOS Y PIES DE PÁGINA FORMALES
+% ==========================================================
+\pagestyle{fancy}
+\setlength{\headheight}{14pt}
+\fancyhf{}
+\lhead{\small\textbf{\textcolor{formalblack}{UPSE}} \textcolor{gray}{$\,\vert\,$} \textcolor{formalblack}{Aplicaciones Distribuidas}}
+\rhead{\small\textcolor{formalblack}{Sistema de Microservicios} \textcolor{gray}{$\,\vert\,$} \textbf{\textcolor{formalblack}{Grupo 4}}}
+\cfoot{\small\textcolor{formalblack}{Página \thepage\ de \pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.8pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+% ==========================================================
+% CAJAS Y TABLAS
+% ==========================================================
+\tcbset{
+    formalbox/.style={
+        enhanced,
+        colback=lightbg,
+        colframe=formalblack,
+        boxrule=0.6pt,
+        leftrule=3.5pt,
+        arc=1mm,
+        left=10pt,
+        right=10pt,
+        top=8pt,
+        bottom=8pt,
+        boxsep=0pt
+    }
+}
+
+\renewcommand{\arraystretch}{1.25}
+\setlength{\tabcolsep}{6pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\captionsetup{
+    font={small,rm},
+    labelfont={bf,color=formalblack},
+    textfont={color=formalblack},
+    skip=6pt
+}
+
+% ==========================================================
+% DOCUMENTO
+% ==========================================================
+\begin{document}
+
+% ==========================================================
+% PÁGINA 1: PORTADA INSTITUCIONAL FORMAL
+% ==========================================================
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{0.8cm}
+
+\IfFileExists{upse.png}{
+    \includegraphics[width=3.8cm]{upse.png}\\[0.6cm]
+}{
+    {\Large \textbf{UNIVERSIDAD ESTATAL PENÍNSULA DE SANTA ELENA}}\\[0.6cm]
+}
+
+{\large \textbf{\textcolor{formalblack}{UNIVERSIDAD ESTATAL PEN\'{I}NSULA DE SANTA ELENA}}}\\[0.2cm]
+{\normalsize \textbf{Facultad de Sistemas y Telecomunicaciones}}\\[0.06cm]
+{\normalsize \textbf{Carrera de Ingenier\'{i}a de Software}}
+
+\vspace{0.8cm}
+\noindent\rule{\textwidth}{1.0pt}
+\vspace{0.25cm}
+
+{\normalsize \textbf{APLICACIONES DISTRIBUIDAS}}
+
+\vspace{0.25cm}
+\noindent\rule{\textwidth}{1.0pt}
+\vspace{0.8cm}
+
+{\Large \textbf{Informe T\'{e}cnico: Microservicios con Descubrimiento Din\'{a}mico, Balanceo de Carga y Persistencia Replicada}\par}
+\vspace{0.45cm}
+{\large \textit{Dise\~{n}o, Implementaci\'{o}n y Validaci\'{o}n Experimental de Alta Disponibilidad, Tolerancia a Fallos y Segregaci\'{o}n de Persistencia}}
+
+\vfill
+
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+\textbf{Integrantes:}           & \textbf{Dami\'{a}n Jes\'{u}s Torres Cadena} \\
+                                & \textbf{Melanie Denisse Tomal\'{a}} \\
+                                & \textbf{Jean Carlos Cede\~{n}o} \\[0.3cm]
+\textbf{Asignatura:}            & Aplicaciones Distribuidas \\[0.2cm]
+\textbf{Carrera:}               & Ingenier\'{i}a de Software \\[0.2cm]
+\textbf{Per\'{i}odo acad\'{e}mico:} & 2026--2 \\[0.2cm]
+\textbf{Fecha de presentaci\'{o}n:} & Noviembre de 2026 \\[0.2cm]
+\textbf{Repositorio GitHub:}    & \url{https://github.com/DevTorres404/microservicios} \\[0.2cm]
+\textbf{Video Demostrativo:}    & \url{https://youtu.be/Gyf0GFP-oaI} \\
+\end{tabularx}
+
+\vspace{0.8cm}
+
+\end{titlepage}
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==========================================================
+% SECCIÓN 1: ARQUITECTURA GENERAL Y TOPOLOGÍA
+% ==========================================================
+\section{Arquitectura General y Topolog\'{i}a del Sistema}
+
+El sistema implementa una arquitectura distribuida orientada a microservicios sobre \textbf{Java 21 LTS}, \textbf{Spring Boot 3.5.16} y \textbf{Spring Cloud 2025.0.3}, integrando persistencia relacional distribuida en \textbf{PostgreSQL 16} mediante replicaci\'{o}n f\'{i}sica as\'{i}ncrona por streaming de WAL.
+
+El entorno se encuentra orquestado de manera reproducible mediante un cl\'{u}ster de \textbf{9 contenedores} coordinados en Docker Compose bajo una red privada com\'{u}n (\texttt{backend}), asegurando m\'{i}nima exposici\'{o}n perimetral:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{2.8cm}L{3.0cm}L{2.2cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{Componente}} & 
+\textcolor{white}{\textbf{Contenedor(es)}} & 
+\textcolor{white}{\textbf{Puertos}} & 
+\textcolor{white}{\textbf{Responsabilidad Arquitect\'{o}nica}} \\
+\midrule[0.8pt]
+\textbf{API Gateway} & 
+\texttt{gateway} & 
+\texttt{8080:8080} & 
+Punto de entrada \'{u}nico hacia el cl\'{u}ster. Enrutamiento declarativo \texttt{lb://}, inyecci\'{o}n de \texttt{X-Correlation-Id}, circuit breakers reactivos y m\'{e}tricas. \\
+\rowcolor{rowgray}
+\textbf{Service Registry} & 
+\texttt{eureka-server} & 
+\texttt{8761:8761} & 
+Cat\'{a}logo de descubrimiento standalone. Gesti\'{o}n din\'{a}mica de leases (5~s renovaci\'{o}n / 15~s expiraci\'{o}n) y autopreservaci\'{o}n desactivada. \\
+\textbf{Servicio Pedidos} & 
+\texttt{pedidos-1}, \texttt{pedidos-2} & 
+Interno \texttt{8082} & 
+Gesti\'{o}n del ciclo de vida de \'{o}rdenes, m\'{a}quina de estados, cliente Feign hacia inventario y orquestaci\'{o}n transaccional local. \\
+\rowcolor{rowgray}
+\textbf{Servicio Inventario} & 
+\texttt{inventario-1}, \texttt{inventario-2} & 
+Interno \texttt{8081} & 
+Control de existencias, reservas at\'{o}micas condicionales, reposici\'{o}n y liberaciones compensatorias idempotentes. \\
+\textbf{Cl\'{u}ster PostgreSQL} & 
+\texttt{pg-primary}, \texttt{pg-replica-1}, \texttt{pg-replica-2} & 
+Interno \texttt{5432} & 
+Persistencia segregada: 1 nodo primario de lectura/escritura y 2 r\'{e}plicas f\'{i}sicas \textit{hot standby} sincronizadas por streaming WAL. \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Matriz de componentes, puertos y asignaci\'{o}n de responsabilidades.}
+\label{tab:componentes}
+\end{table}
+
+\subsection{Distinci\'{o}n de los Tres Mecanismos Independientes de Enrutamiento}
+
+Uno de los principales aportes del dise\~{n}o radica en no confundir los niveles de resoluci\'{o}n. El sistema desacopla formalmente tres mecanismos:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{3.2cm}L{3.0cm}L{3.0cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{Mecanismo}} & 
+\textcolor{white}{\textbf{Nivel}} & 
+\textcolor{white}{\textbf{Tecnolog\'{i}a}} & 
+\textcolor{white}{\textbf{Criterio de Resoluci\'{o}n}} \\
+\midrule[0.8pt]
+\textbf{Descubrimiento de Procesos} & 
+Cat\'{a}logo / Salud & 
+Netflix Eureka & 
+Registro din\'{a}mico por nombre l\'{o}gico; desalojo ante p\'{e}rdida de latidos ($> 15$~s). \\
+\rowcolor{rowgray}
+\textbf{Balanceo de Solicitudes HTTP} & 
+Red de Aplicaci\'{o}n & 
+Spring Cloud LoadBalancer & 
+Distribuci\'{o}n round-robin entre instancias saludables reportadas por Eureka. \\
+\textbf{Enrutamiento de Base de Datos} & 
+Persistencia / JDBC & 
+\texttt{AbstractRouting-} \texttt{DataSource} (AOP) & 
+Segregaci\'{o}n transaccional: escrituras al primario y lecturas balanceadas entre r\'{e}plicas. \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Comparativa de los tres mecanismos de resoluci\'{o}n independientes.}
+\label{tab:mecanismos}
+\end{table}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Principio de Dise\~{n}o:} Eureka \textbf{no} administra las r\'{e}plicas de PostgreSQL, y \texttt{@Transactional(readOnly = true)} \textbf{no} balancea consultas por s\'{i} sola. La selecci\'{o}n de instancia HTTP y la selecci\'{o}n de conexi\'{o}n de persistencia son decisiones desacopladas gobernadas por capas tecnol\'{o}gicas independientes.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% SECCIÓN 2: DISEÑO DE MICROSERVICIOS Y CONTRATOS
+% ==========================================================
+\section{Dise\~{n}o de Microservicios, Contratos y Resiliencia}
+
+\subsection{Aislamiento de Dominios y Persistencia Privada}
+Los microservicios aplican el patr\'{o}n \textit{Database-per-Service}. Cada servicio posee un usuario y base de datos propia en el servidor PostgreSQL (\texttt{pedidos\_db} e \texttt{inventario\_db}). Un script de auditor\'{i}a automatizado (\texttt{scripts/check-boundaries.sh}) verifica en cada compilaci\'{o}n que:
+\begin{enumerate}
+    \item No existan referencias cruzadas entre esquemas SQL de pedidos e inventario.
+    \item No existan dependencias o importaciones directas de clases de dominio entre servicios.
+    \item No existan direcciones IP o puertos r\'{i}gidos configurados en el c\'{o}digo.
+\end{enumerate}
+
+\subsection{Comunicaci\'{o}n Inter-Servicios con Resiliencia}
+La creaci\'{o}n de pedidos requiere consultar y reservar stock en inventario. Esta interacci\'{o}n se resuelve mediante un cliente declarativo OpenFeign (\texttt{@FeignClient(name = "servicio-inventario")}) acoplado a Spring Cloud LoadBalancer. La resiliencia se garantiza mediante:
+\begin{itemize}
+    \item \textbf{Timeouts estrictos}: 500~ms de conexi\'{o}n y 1500~ms de lectura, evitando retenci\'{o}n indefinida de hilos.
+    \item \textbf{Retryer acotado}: M\'{a}ximo 1 reintento exclusivo ante fallos de conectividad f\'{i}sica, ignorando errores de l\'{o}gica de negocio.
+    \item \textbf{Circuit Breaker (Resilience4j)}: Ventana de 10 llamadas, umbral de fallo del 50\,\% y apertura de 10~s. En estado abierto, rechaza llamadas sin tocar la red y deriva al fallback.
+    \item \textbf{Mapeo de errores RFC 9457 (\texttt{ProblemDetail})}: Las excepciones de ca\'{i}da se traducen uniformemente a \textbf{HTTP 503 Service Unavailable} con c\'{o}digo \texttt{INVENTARIO\_NO\_DISPONIBLE}.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.8cm}L{4.2cm}L{3.0cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{M\'{e}todo}} & 
+\textcolor{white}{\textbf{Ruta en Gateway (:8080)}} & 
+\textcolor{white}{\textbf{Servicio Destino}} & 
+\textcolor{white}{\textbf{Descripci\'{o}n y Sem\'{a}ntica}} \\
+\midrule[0.8pt]
+\texttt{GET} & \texttt{/api/inventario} & \texttt{servicio-inventario} & Consulta general de cat\'{a}logo y existencias. \\
+\rowcolor{rowgray}
+\texttt{GET} & \texttt{/api/inventario/\{sku\}} & \texttt{servicio-inventario} & Consulta de stock y precio vigente por SKU. \\
+\texttt{POST} & \texttt{/api/inventario/reservas} & \texttt{servicio-inventario} & Reserva at\'{o}mica condicional multi-l\'{i}nea. \\
+\rowcolor{rowgray}
+\texttt{POST} & \texttt{/api/inventario/reservas/...} & \texttt{servicio-inventario} & Liberaci\'{o}n compensatoria idempotente. \\
+\texttt{PUT} & \texttt{/api/inventario/\{sku\}} & \texttt{servicio-inventario} & Reposici\'{o}n y ajuste de inventario en primario. \\
+\rowcolor{rowgray}
+\texttt{POST} & \texttt{/api/pedidos} & \texttt{servicio-pedidos} & Creaci\'{o}n de pedido orquestada en 2 fases. \\
+\texttt{GET} & \texttt{/api/pedidos/\{id\}} & \texttt{servicio-pedidos} & Lectura cr\'{i}tica (\texttt{@CriticalRead}) en primario. \\
+\rowcolor{rowgray}
+\texttt{GET} & \texttt{/api/pedidos} & \texttt{servicio-pedidos} & Listado ordinario de pedidos en r\'{e}plicas. \\
+\texttt{POST} & \texttt{/api/pedidos/\{id\}/cancelar} & \texttt{servicio-pedidos} & Cancelaci\'{o}n y compensaci\'{o}n \textit{best-effort}. \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Cat\'{a}logo de operaciones REST expuestas a trav\'{e}s del API Gateway.}
+\label{tab:endpoints}
+\end{table}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Orquestaci\'{o}n Transaccional sin 2PC:} La creaci\'{o}n del pedido se ejecuta en dos transacciones locales: 
+(1) Tx1 registra el pedido en estado \texttt{PENDIENTE}; 
+(2) Se invoca a inventario v\'{i}a Feign fuera de transacci\'{o}n para no bloquear filas en PostgreSQL; 
+(3) Tx2 actualiza el pedido a \texttt{CONFIRMADO} con los precios reales o a \texttt{RECHAZADO} si falta stock, aplicando liberaci\'{o}n compensatoria ante errores de red.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% SECCIÓN 3: PERSISTENCIA REPLICADA Y CONSISTENCIA
+% ==========================================================
+\section{Persistencia Replicada y Enrutamiento Din\'{a}mico}
+
+La gesti\'{o}n de base de datos se encapsul\'{o} en la biblioteca compartida \texttt{libs/persistence-routing}, integrando los siguientes patrones:
+
+\subsection{Componentes del Enrutamiento Din\'{a}mico}
+\begin{enumerate}
+    \item \textbf{\texttt{RoutingDataSource}}: Extiende \texttt{AbstractRoutingDataSource} resolviendo din\'{a}micamente la clave \texttt{PRIMARY}, \texttt{REPLICA\_1} o \texttt{REPLICA\_2}.
+    \item \textbf{\texttt{LazyConnectionDataSourceProxy}}: Retarda la solicitud f\'{i}sica de una conexi\'{o}n del pool de Hikari hasta la primera ejecuci\'{o}n de una sentencia SQL real, permitiendo que el aspecto AOP determine la fuente correcta sin incurrir en cambios de conexi\'{o}n a mitad de transacci\'{o}n.
+    \item \textbf{\texttt{ReplicaSelector}}: Implementa balanceo determinista round-robin sobre las r\'{e}plicas disponibles usando un \texttt{AtomicInteger} combinado con \texttt{Math.floorMod} para prevenir desbordes num\'{e}ricos.
+    \item \textbf{\texttt{ReplicaHealthRegistry}}: Mantiene un hilo de monitoreo en segundo plano ejecutando cada 5~s la consulta \texttt{SELECT 1} y verificando \texttt{pg\_stat\_wal\_receiver.status = 'streaming'}. La recuperaci\'{o}n sigue una m\'{a}quina de estados de dos fases: \texttt{DOWN $\rightarrow$ PROBING $\rightarrow$ UP} (requiriendo dos sondeos exitosos consecutivos).
+\end{enumerate}
+
+\subsection{Garant\'{i}a Read-Your-Writes mediante \texttt{@CriticalRead}}
+En un entorno con replicaci\'{o}n as\'{i}ncrona existe una ventana de retraso (\textit{replication lag}) en la que las r\'{e}plicas no reflejan de inmediato el registro reci\'{e}n escrito. Para evitar que un usuario cree un pedido y al recargar la pantalla reciba un 404, se dise\~{n}\'{o} la anotaci\'{o}n \texttt{@CriticalRead}.
+
+El aspecto AOP (\texttt{ReadWriteRoutingAspect}) eval\'{u}a la precedencia estricta:
+\[
+\text{@CriticalRead (PRIMARY)} \;\;>\;\; \text{@Transactional(readOnly = false) (PRIMARY)} \;\;>\;\; \text{@Transactional(readOnly = true) (REPLICA)}
+\]
+
+\subsection{Modo Degradado Autom\'{a}tico}
+Si ambas r\'{e}plicas quedan fuera de servicio, el selector conmuta autom\'{a}ticamente todas las consultas al nodo \texttt{PRIMARY}, registrando un \texttt{WARN} \'{u}nico de transici\'{o}n e incrementando la m\'{e}trica de Micrometer \texttt{db\_routing\_degraded\_total}, preservando la disponibilidad absoluta del servicio.
+
+\begin{figure}[H]
+\centering
+\begin{tcolorbox}[formalbox]
+\small
+\textbf{Flujo Transaccional Segregado:}
+\begin{itemize}
+    \item \textbf{Escrituras (\texttt{POST}, \texttt{PUT})}: \texttt{@Transactional} $\rightarrow$ adscripci\'{o}n f\'{i}sica a \texttt{pg-primary}.
+    \item \textbf{Lecturas Ordinarias (\texttt{GET /api/inventario})}: \texttt{@Transactional(readOnly = true)} $\rightarrow$ Hikari pool hacia \texttt{pg-replica-1} o \texttt{pg-replica-2}.
+    \item \textbf{Lectura Cr\'{i}tica (\texttt{GET /api/pedidos/\{id\}})}: \texttt{@CriticalRead} $\rightarrow$ fuerza \texttt{pg-primary} garantizando consistencia inmediata.
+\end{itemize}
+\end{tcolorbox}
+\caption{Reglas operativas del enrutamiento din\'{a}mico de base de datos.}
+\label{fig:routing-rules}
+\end{figure}
+
+\clearpage
+
+% ==========================================================
+% SECCIÓN 4: RESULTADOS EXPERIMENTALES (P01 A P08 Y P06B)
+% ==========================================================
+\section{Resultados y Validaci\'{o}n Experimental (P01 a P08 y P06b)}
+
+Cada uno de los escenarios requeridos por la gu\'{i}a de la actividad fue inducido, medido y documentado mediante scripts reproducibles con captura de datos crudos (\texttt{docs/informes/raw/}):
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.4cm}L{3.2cm}L{3.8cm}L{3.4cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{Prueba}} & 
+\textcolor{white}{\textbf{Escenario}} & 
+\textcolor{white}{\textbf{Condici\'{o}n / M\'{e}todo}} & 
+\textcolor{white}{\textbf{M\'{e}trica Medida}} & 
+\textcolor{white}{\textbf{Resultado}} \\
+\midrule[0.8pt]
+\textbf{P01} & Descubrimiento Eureka & Inspecci\'{o}n del cat\'{a}logo crudo & 4 instancias registradas \texttt{UP} & \textbf{Cumplido (100\,\%)} \\
+\rowcolor{rowgray}
+\textbf{P02} & Balanceo HTTP & 100 peticiones secuenciales & Reparto 50\,\% / 50\,\% (m\'{a}x $\le 75\,\%$) & \textbf{Cumplido (100\,\%)} \\
+\textbf{P03} & Fallo de instancia & \texttt{docker stop pedidos-2} & Expulsi\'{o}n: 17~s / Retorno: 18~s & \textbf{Cumplido} ($\ge 90\,\%$) \\
+\rowcolor{rowgray}
+\textbf{P04} & Inter-servicios y Fallo & Pedidos $\rightarrow$ Inventario (ca\'{i}do) & Mismo \texttt{X-Correlation-Id} / 503 & \textbf{Cumplido} \\
+\textbf{P05} & Enrutamiento SQL & Auditor\'{i}a \texttt{log\_statement=all} & 0 escrituras en r\'{e}plicas & \textbf{Cumplido} \\
+\rowcolor{rowgray}
+\textbf{P06} & Fallo de r\'{e}plica & \texttt{docker stop pg-replica-1} & Detecci\'{o}n y desv\'{i}o en 6~s ($\le 10$~s) & \textbf{Cumplido} \\
+\textbf{P06b}& Modo degradado & Parada simult\'{a}nea de r\'{e}plicas & 100\,\% lecturas en \texttt{PRIMARY} & \textbf{Cumplido} \\
+\rowcolor{rowgray}
+\textbf{P07} & Lectura cr\'{i}tica & 20 ciclos escritura + lectura & 20/20 datos frescos ($lag < 3.5$~ms) & \textbf{Cumplido} \\
+\textbf{P08} & Retorno de r\'{e}plica & Reinicio con verificaci\'{o}n WAL & Reincorporaci\'{o}n en 12~s ($\le 60$~s) & \textbf{Cumplido} \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Matriz consolidada de evaluaci\'{o}n experimental de alta disponibilidad.}
+\label{tab:pruebas}
+\end{table}
+
+\subsection{An\'{a}lisis T\'{e}cnico de Escenarios Cr\'{i}ticos}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Evidencia P02 --- Distribuci\'{o}n de Tr\'{a}fico en 100 Solicitudes:}
+Sobre un ensayo de 100 peticiones dirigidas al endpoint \texttt{GET /api/inventario} a trav\'{e}s del API Gateway, se obtuvo una tasa de \textbf{\'{e}xito de 100/100 (100\,\%)}. La distribuci\'{o}n observada en cabeceras \texttt{X-Service-Instance} fue de exactamente \textbf{50 peticiones para \texttt{inventario-1}} y \textbf{50 peticiones para \texttt{inventario-2}}, satisfaciendo con holgura el l\'{i}mite m\'{a}ximo del 75\,\% por instancia.
+\end{tcolorbox}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Evidencia P03 --- Desalojo y Reincorporaci\'{o}n en Eureka:}
+Al detener \texttt{pedidos-2}, la expiraci\'{o}n observable se produjo a los \textbf{17 segundos} (descompuesta en 15~s de duraci\'{o}n de lease m\'{a}s 3~s del barrido del timer). Durante la ventana de transici\'{o}n se registraron las solicitudes fallidas; una vez consumada la expulsi\'{o}n, el 100\,\% de las solicitudes posteriores fueron resueltas por \texttt{pedidos-1}. Al reiniciar el contenedor, el registro como \texttt{UP} y la recepci\'{o}n de tr\'{a}fico se restablecieron en \textbf{18 segundos}.
+\end{tcolorbox}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Evidencia P05 y P07 --- Verificaci\'{o}n No Circular de Base de Datos:}
+El contraste contra las tablas del cat\'{a}logo de PostgreSQL (\texttt{pg\_stat\_activity}) y los logs del motor con \texttt{log\_statement=all} demostr\'{o} \textbf{cero sentencias \texttt{INSERT} o \texttt{UPDATE} en \texttt{pg-replica-1} y \texttt{pg-replica-2}}. En la prueba P07, el retraso de replicaci\'{o}n (\texttt{replay\_lag}) medido en el microsegundo exacto de la lectura cr\'{i}tica permaneci\'{o} inferior a \textbf{3.5 milisegundos}, confirmando la solidez de la pol\'{i}tica implementada.
+\end{tcolorbox}
+
+\clearpage
+
+% ==========================================================
+% SECCIÓN 5: REGISTRO DE DECISIONES DE ARQUITECTURA (ADRS)
+% ==========================================================
+\section{Registro de Decisiones de Arquitectura (ADR-01 a ADR-10)}
+
+En cumplimiento de las buenas pr\'{a}cticas de ingenier\'{i}a, todas las decisiones estructurales del proyecto fueron formalizadas en el registro \texttt{docs/decisiones.md}:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{@{}L{1.8cm}L{3.2cm}L{3.8cm}Y@{}}
+\toprule[1.2pt]
+\rowcolor{headerdark}
+\textcolor{white}{\textbf{C\'{o}digo}} & 
+\textcolor{white}{\textbf{T\'{i}tulo / Dominio}} & 
+\textcolor{white}{\textbf{Decisi\'{o}n Adoptada}} & 
+\textcolor{white}{\textbf{L\'{i}mite o Costo T\'{e}cnico Asumido}} \\
+\midrule[0.8pt]
+\textbf{ADR-01} & Selecci\'{o}n de nodo BD & \texttt{AbstractRoutingDataSource} + AOP & La decisi\'{o}n aplica por transacci\'{o}n, no por sentencia individual. \\
+\rowcolor{rowgray}
+\textbf{ADR-02} & Detecci\'{o}n de r\'{e}plica & Sondeo activo 5~s + timeout 1~s & Requiere conexi\'{o}n persistente de monitoreo adicional por nodo. \\
+\textbf{ADR-03} & Reparto de lecturas & Round-robin con \texttt{AtomicInteger} & No considera la carga de CPU o complejidad anal\'{i}tica de la consulta. \\
+\rowcolor{rowgray}
+\textbf{ADR-04} & Topolog\'{i}a PostgreSQL & 1 primario + 2 r\'{e}plicas f\'{i}sicas & Sin promoci\'{o}n autom\'{a}tica de r\'{e}plica ante p\'{e}rdida del primario. \\
+\textbf{ADR-05} & Imagen PostgreSQL & \texttt{postgres:16} oficial + wrapper & El tiempo de inicializaci\'{o}n en fr\'{i}o incluye la ejecuci\'{o}n de \texttt{pg\_basebackup}. \\
+\rowcolor{rowgray}
+\textbf{ADR-06} & Migraciones Flyway & Bean \texttt{Flyway} apuntando a primario & Se deshabilita la auto-configuraci\'{o}n est\'{a}ndar de Spring Boot. \\
+\textbf{ADR-07} & Consistencia cr\'{i}tica & Anotaci\'{o}n \texttt{@CriticalRead} & Sobrecarga el nodo primario si se abusa de la anotaci\'{o}n en lecturas comunes. \\
+\rowcolor{rowgray}
+\textbf{ADR-08} & Modo de replicaci\'{o}n & Streaming WAL as\'{i}ncrono & Existe riesgo m\'{i}nimo de p\'{e}rdida de transacciones no replicadas si cae el primario. \\
+\textbf{ADR-09} & M\'{o}dulo t\'{e}cnico & \texttt{libs/persistence-routing} & Cero clases de negocio; reutilizable pero acoplado conceptualmente a Spring. \\
+\rowcolor{rowgray}
+\textbf{ADR-10} & Matriz de versiones & Boot 3.5.16 + Cloud 2025.0.3 + Java 21 & La release train 2025.0.x se encuentra en soporte final; futuros bumps exigen Boot 4.x. \\
+\bottomrule[1.2pt]
+\end{tabularx}
+\caption{Consolidado de las diez Decisiones de Arquitectura (ADR).}
+\label{tab:adrs}
+\end{table}
+
+\section{Enlaces de Entrega y Verificaci\'{o}n de Reproducibilidad}
+
+\begin{tcolorbox}[formalbox]
+\textbf{Repositorio de C\'{o}digo Fuente en GitHub:}\\
+\url{https://github.com/DevTorres404/microservicios}\\[0.25cm]
+\textbf{Pull Request Formal \#1 (Merged con historial completo de commits):}\\
+\url{https://github.com/DevTorres404/microservicios/pull/1}\\[0.25cm]
+\textbf{Video Demostrativo del Sistema en Ejecuci\'{o}n (YouTube):}\\
+\url{https://youtu.be/Gyf0GFP-oaI}
+\end{tcolorbox}
+
+\subsection{Comando \'{U}nico de Verificaci\'{o}n desde Clon Limpio}
+El sistema cumple estrictamente el requisito de reproducibilidad. Cualquier evaluador puede validar la arquitectura ejecutando:
+\begin{verbatim}
+git clone https://github.com/DevTorres404/microservicios.git
+cd microservicios
+bash scripts/verify-from-scratch.sh
+\end{verbatim}
+Este script levanta los 9 contenedores, confirma el estado saludable de cada proceso, verifica el registro din\'{a}mico en Eureka y valida las cabeceras de respuesta de negocio y base de datos con c\'{o}digo de salida \texttt{exit 0}.
+
+\end{document}
