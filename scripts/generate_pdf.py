@@ -91,19 +91,19 @@ html_content = """<!DOCTYPE html>
   }
 
   .cover-title-box {
-    margin: 12mm 0 8mm 0;
+    margin: 8mm 0 6mm 0;
   }
 
   .cover-title {
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: 700;
     line-height: 1.35;
     color: #111111;
-    margin-bottom: 4mm;
+    margin-bottom: 3.5mm;
   }
 
   .cover-subtitle {
-    font-size: 11.5pt;
+    font-size: 11pt;
     font-style: italic;
     color: #334155;
     line-height: 1.45;
@@ -116,14 +116,14 @@ html_content = """<!DOCTYPE html>
     border: 0.8pt solid #CBD5E1;
     border-left: 4pt solid #111111;
     border-radius: 4px;
-    padding: 6mm 8mm;
+    padding: 5mm 7mm;
     font-family: 'Inter', sans-serif;
-    font-size: 9.5pt;
+    font-size: 9pt;
   }
 
   .meta-row {
     display: flex;
-    margin-bottom: 2.5mm;
+    margin-bottom: 2mm;
   }
 
   .meta-label {
@@ -286,7 +286,7 @@ html_content = """<!DOCTYPE html>
     <div class="cover-fac">Carrera de Ingeniería de Software</div>
     
     <hr class="cover-rule">
-    <div class="cover-subject">APLICACIONES DISTRIBUIDAS</div>
+    <div class="cover-subject">SISTEMAS DISTRIBUIDOS Y CLOUD COMPUTING</div>
     <hr class="cover-rule">
   </div>
 
@@ -305,8 +305,12 @@ html_content = """<!DOCTYPE html>
       </div>
     </div>
     <div class="meta-row">
+      <div class="meta-label">Docente:</div>
+      <div class="meta-value"><b>Ing. Pachay Espinoza Anthony Abrahan</b></div>
+    </div>
+    <div class="meta-row">
       <div class="meta-label">Asignatura:</div>
-      <div class="meta-value">Aplicaciones Distribuidas</div>
+      <div class="meta-value">Sistemas Distribuidos y Cloud Computing</div>
     </div>
     <div class="meta-row">
       <div class="meta-label">Carrera / Período:</div>
@@ -768,7 +772,7 @@ bash scripts/verify-from-scratch.sh</pre>
 
 header_html = """
 <div style="font-family: 'Inter', sans-serif; font-size: 8pt; width: 100%; display: flex; justify-content: space-between; border-bottom: 0.6pt solid #CBD5E1; padding-bottom: 2mm; margin: 0 20mm; color: #475569;">
-  <span><b style="color: #111111;">UPSE</b> &nbsp;|&nbsp; Aplicaciones Distribuidas</span>
+  <span><b style="color: #111111;">UPSE</b> &nbsp;|&nbsp; Sistemas Distribuidos y Cloud Computing</span>
   <span>Sistema de Microservicios &nbsp;|&nbsp; <b style="color: #111111;">Grupo Torres-Tomalá-Cedeño</b></span>
 </div>
 """
