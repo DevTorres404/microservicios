@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 from playwright.sync_api import sync_playwright
 
 html_content = """<!DOCTYPE html>
@@ -36,22 +37,28 @@ html_content = """<!DOCTYPE html>
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 250mm;
+    min-height: 240mm;
     text-align: center;
-    padding: 10mm 5mm;
+    padding: 4mm 5mm 6mm 5mm;
   }
 
   .cover-header {
-    margin-top: 5mm;
+    margin-top: 2mm;
   }
 
   .cover-logo {
+    margin-bottom: 3mm;
     font-family: 'Inter', sans-serif;
     font-size: 26pt;
     font-weight: 800;
     letter-spacing: 2px;
     color: #111111;
-    margin-bottom: 5mm;
+  }
+
+  .cover-logo img {
+    height: 32mm;
+    max-width: 100%;
+    object-fit: contain;
   }
 
   .cover-inst {
@@ -273,7 +280,7 @@ html_content = """<!DOCTYPE html>
 <!-- PÁGINA 1: PORTADA -->
 <div class="cover-page">
   <div class="cover-header">
-    <div class="cover-logo">UPSE</div>
+    <div class="cover-logo">__UPSE_LOGO_TAG__</div>
     <div class="cover-inst">UNIVERSIDAD ESTATAL PENÍNSULA DE SANTA ELENA</div>
     <div class="cover-fac">Facultad de Sistemas y Telecomunicaciones</div>
     <div class="cover-fac">Carrera de Ingeniería de Software</div>
@@ -773,9 +780,19 @@ footer_html = """
 """
 
 def generate():
+    rendered_html = html_content
+    upse_data_uri = ""
+    if os.path.exists("upse.png"):
+        with open("upse.png", "rb") as f:
+            upse_b64 = base64.b64encode(f.read()).decode("utf-8")
+            upse_data_uri = f"data:image/png;base64,{upse_b64}"
+    
+    logo_tag = f'<img src="{upse_data_uri}" alt="UPSE">' if upse_data_uri else 'UPSE'
+    rendered_html = rendered_html.replace("__UPSE_LOGO_TAG__", logo_tag)
+
     temp_html = "temp_informe.html"
     with open(temp_html, "w", encoding="utf-8") as f:
-        f.write(html_content)
+        f.write(rendered_html)
 
     print("Rendering PDF with Playwright...")
     with sync_playwright() as p:
