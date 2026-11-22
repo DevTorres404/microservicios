@@ -293,8 +293,8 @@ html_content = """<!DOCTYPE html>
       <div class="meta-label">Integrantes:</div>
       <div class="meta-value">
         <b>Damián Jesús Torres Cadena</b><br>
-        <b>Melanie Denisse Tomalá</b><br>
-        <b>Jean Carlos Cedeño</b>
+        <b>Melanie Adriana Tomalá Merejildo</b><br>
+        <b>Jean Pierre Cedeño Andrade</b>
       </div>
     </div>
     <div class="meta-row">
