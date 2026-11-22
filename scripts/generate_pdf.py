@@ -740,7 +740,7 @@ html_content = """<!DOCTYPE html>
   </table>
   <div class="table-caption">Tabla 5: Consolidado de las diez Decisiones de Arquitectura (ADR).</div>
 
-  <h1>6. Enlaces de Entrega y Verificación de Reproducibilidad</h1>
+  <h1 style="page-break-before: always;">6. Enlaces de Entrega y Verificación de Reproducibilidad</h1>
 
   <h2>6.1 Estructura y Descripción de Entregables</h2>
   <p>El proyecto se articula en cuatro componentes de entrega formal debidamente auditables:</p>
