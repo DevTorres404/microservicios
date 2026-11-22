@@ -465,6 +465,15 @@ En cumplimiento de las buenas pr\'{a}cticas de ingenier\'{i}a, todas las decisio
 
 \section{Enlaces de Entrega y Verificaci\'{o}n de Reproducibilidad}
 
+\subsection{Estructura y Descripci\'{o}n de Entregables}
+El proyecto se articula en cuatro componentes de entrega formal debidamente auditables:
+\begin{enumerate}
+    \item \textbf{Informe T\'{e}cnico Formal (PDF/LaTeX)}: Documenta la topolog\'{i}a distribuida, patrones arquitect\'{o}nicos aplicados, dise\~{n}o del enrutamiento din\'{a}mico de persistencia, resultados de las pruebas P01--P08 y consolidado de diez ADRs.
+    \item \textbf{Repositorio de C\'{o}digo Fuente (GitHub)}: Base de c\'{o}digo completa en Java 21 / Spring Boot 3.5.16, m\'{o}dulo t\'{e}cnico desacoplado \texttt{libs/persistence-routing}, Dockerfiles multi-stage y orquestaci\'{o}n con Docker Compose.
+    \item \textbf{Pull Request y Trazabilidad Git}: Historial de desarrollo estructurado en ramas de trabajo (\texttt{feature/sistema-microservicios-distribuidos}) integradas mediante Pull Request formal revisado y fusionado a \texttt{main}.
+    \item \textbf{Video Demostrativo (YouTube)}: Evidencia audiovisual donde el equipo sustenta las decisiones de dise\~{n}o y demuestra en tiempo real el registro en Eureka, balanceo round-robin, tolerancia a ca\'{i}das y garant\'{i}a \textit{read-your-writes}.
+\end{enumerate}
+
 \begin{tcolorbox}[formalbox]
 \textbf{Repositorio de C\'{o}digo Fuente en GitHub:}\\
 \url{https://github.com/DevTorres404/microservicios}\\[0.25cm]

@@ -741,6 +741,16 @@ html_content = """<!DOCTYPE html>
   <div class="table-caption">Tabla 5: Consolidado de las diez Decisiones de Arquitectura (ADR).</div>
 
   <h1>6. Enlaces de Entrega y Verificación de Reproducibilidad</h1>
+
+  <h2>6.1 Estructura y Descripción de Entregables</h2>
+  <p>El proyecto se articula en cuatro componentes de entrega formal debidamente auditables:</p>
+  <ul>
+    <li><b>Informe Técnico Formal (PDF/LaTeX):</b> Documenta la topología distribuida, patrones arquitectónicos aplicados, diseño del enrutamiento dinámico de persistencia, resultados de las pruebas P01 a P08 y consolidado de diez ADRs.</li>
+    <li><b>Repositorio de Código Fuente (GitHub):</b> Base de código completa en Java 21 / Spring Boot 3.5.16, módulo técnico desacoplado <code>libs/persistence-routing</code>, Dockerfiles multi-stage y orquestación con Docker Compose.</li>
+    <li><b>Pull Request y Trazabilidad Git:</b> Historial de desarrollo estructurado en ramas de trabajo integradas mediante Pull Request formal revisado y fusionado a <code>main</code> (#1).</li>
+    <li><b>Video Demostrativo (YouTube):</b> Evidencia audiovisual donde el equipo sustenta las decisiones de diseño y demuestra en tiempo real el registro en Eureka, balanceo round-robin, tolerancia a caídas y garantía <i>read-your-writes</i>.</li>
+  </ul>
+
   <div class="formal-box">
     <strong>Repositorio de Código Fuente en GitHub:</strong><br>
     <a href="https://github.com/DevTorres404/microservicios">https://github.com/DevTorres404/microservicios</a><br><br>
@@ -750,7 +760,7 @@ html_content = """<!DOCTYPE html>
     <a href="https://youtu.be/Gyf0GFP-oaI">https://youtu.be/Gyf0GFP-oaI</a>
   </div>
 
-  <h2>6.1 Comando Único de Verificación desde Clon Limpio</h2>
+  <h2>6.2 Comando Único de Verificación desde Clon Limpio</h2>
   <p>
     El sistema cumple estrictamente el requisito de reproducibilidad. Cualquier evaluador puede validar la arquitectura ejecutando:
   </p>
